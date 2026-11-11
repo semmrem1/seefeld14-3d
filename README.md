@@ -11,7 +11,7 @@ Läuft direkt im Browser, ohne Build-Schritt.
 - Räume anklickbar, mit Flächen gemäss Verkaufsunterlagen und Circa-Massen in Metern
 - Begehen-Modus in Augenhöhe (ziehen, antippen, WASD)
 - Drei Ausbaulinien für Böden, Küche und Nasszellen umschaltbar
-- Sonnenstand für Uster am 15. Juli mit Regler für die Tageszeit
+- Sonnenstand für Uster mit Monatswahl und Regler für die Tageszeit
 - Eckdaten zu Preis, Flächen, Haustechnik, Terminen und Lage
 
 ## Hinweise

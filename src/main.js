@@ -3,7 +3,7 @@ import { OrbitControls } from './../vendor/OrbitControls.js';
 import {
   rooms, outline, openings, windows, terrace, garden, furniture, diningTable, ausbaulinien,
   facts, WALL_H, DEPTH, BUILDING_LEN, r,
-} from './data.js?v=3';
+} from './data.js?v=5';
 
 const canvas = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
@@ -41,7 +41,19 @@ sun.target.position.set(10, 0, 7);
 // Nordrichtung gemäss Nordpfeil im Grundriss (ca. 40° im Uhrzeigersinn gegenüber Plan-oben)
 const NORTH = new THREE.Vector3(0.64, 0, -0.77).normalize();
 const EAST = new THREE.Vector3(0.77, 0, 0.64).normalize();
-const LAT = 47.34 * Math.PI / 180, DECL = 21.5 * Math.PI / 180, SOLAR_NOON = 13.52; // MESZ
+const LAT = 47.34 * Math.PI / 180, LON = 8.70;
+// Pro Monat (jeweils der 15.): Tag im Jahr, Zeitgleichung in Minuten, Sommerzeit
+const MONTHS = [['Januar', 15, -9, 0], ['Februar', 46, -14, 0], ['März', 74, -9, 0], ['April', 105, 0, 1], ['Mai', 135, 4, 1], ['Juni', 166, 0, 1],
+  ['Juli', 196, -6, 1], ['August', 227, -4, 1], ['September', 258, 5, 1], ['Oktober', 288, 14, 1], ['November', 319, 15, 0], ['Dezember', 349, 5, 0]];
+let month = 6, DECL = 0, SOLAR_NOON = 0, SUNRISE = 0, SUNSET = 0;
+function setMonth(i) {
+  month = i; const [, n, eot, dst] = MONTHS[i];
+  DECL = 23.44 * Math.PI / 180 * Math.sin(2 * Math.PI * (284 + n) / 365);
+  SOLAR_NOON = 12 + (15 - LON) * 4 / 60 - eot / 60 + dst;   // Uhrzeit in MEZ bzw. MESZ
+  const H0 = Math.acos(-Math.tan(LAT) * Math.tan(DECL)) * 12 / Math.PI;
+  SUNRISE = SOLAR_NOON - H0; SUNSET = SOLAR_NOON + H0;
+}
+setMonth(6);
 function sunAt(hour) {
   const H = (hour - SOLAR_NOON) * 15 * Math.PI / 180;
   const sinEl = Math.sin(LAT) * Math.sin(DECL) + Math.cos(LAT) * Math.cos(DECL) * Math.cos(H);
@@ -62,7 +74,9 @@ function applySun() {
   const hh = Math.floor(sunHour), mm = Math.floor((sunHour - hh) * 60);
   const azDeg = (s.az * 180 / Math.PI + 360) % 360;
   const comp = ['N', 'NO', 'O', 'SO', 'S', 'SW', 'W', 'NW'][Math.round(azDeg / 45) % 8];
-  sunLabel.textContent = `15. Juli · ${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')} · Sonne ${comp}, ${Math.max(0, Math.round(s.el * 180 / Math.PI))}° hoch`;
+  const fmt = (t) => `${String(Math.floor(t)).padStart(2, '0')}:${String(Math.floor((t % 1) * 60)).padStart(2, '0')}`;
+  sunLabel.textContent = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')} · ` + (s.el > 0 ? `Sonne ${comp}, ${Math.round(s.el * 180 / Math.PI)}° hoch` : 'Sonne unter dem Horizont');
+  sunInfo.textContent = `Sonnenaufgang ${fmt(SUNRISE)}, Untergang ${fmt(SUNSET)}, Höchststand ${Math.round((Math.PI / 2 - LAT + DECL) * 180 / Math.PI)}°`;
 }
 
 // ---------- Texturen (prozedural, Farbe kommt aus der Ausbaulinie) ----------
@@ -385,39 +399,44 @@ for (let i = 0; i < 3; i++) {
   addBalcony('w', i % 2 ? 4.6 : 1.4, y + 0.05);
   addBalcony('w', i % 2 ? 9.6 : 8.2, y + 0.05, 2.6);
   [1.5, 6, 10.5].forEach((z) => addWin('e', z, y + 0.05));
-  if (i > 0) addBalcony('s', 17 + (i % 2) * 3, y + 0.05, 3.0);
+  addBalcony('s', 5.5 + (i % 2) * 3.2, y + 0.05, 3.0);
+  addBalcony('s', 14.5 + ((i + 1) % 2) * 3.2, y + 0.05, 3.0);
+  if (i > 0) addBalcony('s', 22 + (i % 2) * 1.5, y + 0.05, 2.6);
 }
 {
   const E = EAVE - 0.25;
   upper.add(box({ x0: -0.06, x1: BUILDING_LEN + 0.06, z0: -0.06, z1: DEPTH + 0.06 }, E - 0.02, E + 0.1, bandMat));
-  // Satteldach: First entlang der Längsachse, Giebelfelder in Holz
-  const h = 6.2, o = 0.35;
+  // Asymmetrisches Satteldach: First quer zum Gebäude, Giebel auf den Längsseiten (Süd und Nord),
+  // flache Dachfläche zur Westseite, steilere zur Strassenseite im Osten
+  const h = 6.4, o = 0.4, RX = 18.2;
   const body = new THREE.Shape();
-  body.moveTo(0, 0); body.lineTo(DEPTH, 0); body.lineTo(DEPTH / 2, h); body.closePath();
-  const gable = new THREE.Mesh(new THREE.ExtrudeGeometry(body, { depth: BUILDING_LEN, bevelEnabled: false }), [facadeEnd, facadeEnd]);
-  gable.rotation.y = -Math.PI / 2; gable.position.set(BUILDING_LEN, E, 0); gable.castShadow = true; upper.add(gable);
-  const slope = Math.atan2(h, DEPTH / 2), len = Math.hypot(h, DEPTH / 2) + 0.6;
-  for (const side of [-1, 1]) {
-    const p = new THREE.Mesh(new THREE.BoxGeometry(BUILDING_LEN + 2 * o, 0.16, len), roofMat);
-    p.position.set(BUILDING_LEN / 2, E + h / 2 + 0.03, DEPTH / 2 + side * (DEPTH / 4 + 0.14));
-    p.rotation.x = side * slope; p.castShadow = true; upper.add(p);
-    // Photovoltaik: Modulraster auf dem Hauptdach (Baubeschrieb Pos. 239), Lage schematisch
-    for (let k = 0; k < 12; k++) {
-      if (side === -1 && k >= 1 && k <= 3) continue; // Platz für den Dachaufbau
-      const m = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.05, len * 0.7), pvMat);
-      m.position.set(1.9 + k * 2.15, E + h / 2 + 0.15, DEPTH / 2 + side * (DEPTH / 4 + 0.12));
-      m.rotation.x = side * slope; upper.add(m);
+  body.moveTo(0, 0); body.lineTo(BUILDING_LEN, 0); body.lineTo(RX, h); body.closePath();
+  const gable = new THREE.Mesh(new THREE.ExtrudeGeometry(body, { depth: DEPTH, bevelEnabled: false }), [facadeEnd, facadeEnd]);
+  gable.position.set(0, E, 0); gable.castShadow = true; upper.add(gable);
+  const slopes = [
+    { len: Math.hypot(RX, h), cx: RX / 2, ang: Math.atan2(h, RX) },
+    { len: Math.hypot(BUILDING_LEN - RX, h), cx: (RX + BUILDING_LEN) / 2, ang: -Math.atan2(h, BUILDING_LEN - RX) },
+  ];
+  slopes.forEach((sl, idx) => {
+    const p = new THREE.Mesh(new THREE.BoxGeometry(sl.len + 0.7, 0.16, DEPTH + 2 * o), roofMat);
+    p.position.set(sl.cx, E + h / 2 + 0.1, DEPTH / 2); p.rotation.z = sl.ang; p.castShadow = true; upper.add(p);
+    // Photovoltaik: Modulbahnen auf dem Hauptdach (Baubeschrieb Pos. 239), Lage schematisch
+    for (let k = 0; k < 6; k++) {
+      const z = 1.6 + k * 2.15;
+      if (idx === 0 && z < 7.2) continue; // Platz für den Dachaufbau
+      const m = new THREE.Mesh(new THREE.BoxGeometry(sl.len * 0.74, 0.05, 1.9), pvMat);
+      m.position.set(sl.cx, E + h / 2 + 0.22, z); m.rotation.z = sl.ang; upper.add(m);
     }
+  });
+  // Giebelfenster und Balkone im Dachgeschoss (Süd- und Nordgiebel)
+  for (const face of ['s', 'n']) {
+    addWin(face, RX - 5.2, E + 0.2, 1.3); addWin(face, RX - 2.2, E + 0.2, 1.3); addWin(face, RX + 1.6, E + 0.2, 1.3);
+    addWin(face, RX - 0.9, E + 3.0, 1.3, 1.9);
   }
-  // Giebelfenster und Balkone im Dachgeschoss (West)
-  addWin('w', DEPTH / 2 - 2.9, E + 0.2, 1.3); addWin('w', DEPTH / 2 + 1.2, E + 0.2, 1.3);
-  addBalcony('w', DEPTH / 2 - 0.6, E + 0.2, 3.0);
-  addWin('w', DEPTH / 2 - 0.65, E + 3.0, 1.3, 1.9);
-  addBalcony('w', DEPTH / 2 - 1.2, E + 3.0, 2.4, 1.1);
-  addWin('e', DEPTH / 2 - 2.2, E + 0.2, 1.3); addWin('e', DEPTH / 2 + 0.9, E + 0.2, 1.3);
-  // Dachaufbau in Zinkblech auf der Nordseite
-  upper.add(box({ x0: 3.2, x1: 9.2, z0: 0.5, z1: 5.4 }, E + 0.3, E + 3.4, zinc));
-  const dw = box({ x0: 3.6, x1: 5.8, z0: 0.44, z1: 0.52 }, E + 0.9, E + 3.1, winMat); upper.add(dw);
+  addBalcony('s', RX - 3.2, E + 0.2, 3.4); addBalcony('s', RX - 1.4, E + 3.0, 2.4, 1.1);
+  // Dachaufbau in Zinkblech auf der flachen Westfläche
+  upper.add(box({ x0: 2.6, x1: 8.2, z0: 0.9, z1: 6.0 }, E + 0.5, E + 3.6, zinc));
+  const dw = box({ x0: 2.54, x1: 2.62, z0: 1.4, z1: 4.6 }, E + 1.3, E + 3.3, winMat); upper.add(dw);
 }
 scene.add(upper);
 
@@ -450,7 +469,7 @@ addLabel(new THREE.Vector3(-1.75, 0.2, 10.5), `<b>Garten</b><span>${garden.area.
 addLabel(new THREE.Vector3((terrace.x0 + terrace.x1) / 2, 0.2, (terrace.z0 + terrace.z1) / 2), `<b>Terrasse</b><span>${terrace.area} m²</span>`, 'out room');
 addLabel(new THREE.Vector3(21.5, WALL_H, 7), '<b>Keller · Velos · Waschen · Autolift</b>', 'out room');
 addLabel(new THREE.Vector3(-7, 1.2, -3), '<b>N</b>', 'north');
-addLabel(new THREE.Vector3(13.5, EAVE + 7, DEPTH / 2), '<b>Photovoltaik</b><span>auf dem Hauptdach</span>', 'building');
+addLabel(new THREE.Vector3(10, EAVE + 5.5, DEPTH * 0.7), '<b>Photovoltaik</b><span>auf dem Hauptdach</span>', 'building');
 addLabel(new THREE.Vector3(-1.6, 1.6, DEPTH * 0.75), '<b>Wohnung 01</b><span>Gartengeschoss</span>', 'building');
 
 // Masslinien: dünner Strich am Boden mit Endmarken, Wert aus dem Modell (gerundet, ca.)
@@ -561,7 +580,7 @@ async function tour() {
   if (!await fly([-24 * far, 15 * far, -16 * far], [11, 7, 7], 1600, tk)) return;
   if (!await fly([-22 * far, 17 * far, 34 * far], [11, 7, 7], 6500, tk)) return;
   setCaption('Photovoltaik auf dem Hauptdach', 'Wärmepumpe mit Erdsonden, Freecooling im Sommer');
-  if (!await fly([13, 40 * far, 30 * far], [13, 10, 7], 3200, tk)) return;
+  if (!await fly([-16 * far, 34 * far, 26 * far], [11, 10, 7], 3200, tk)) return;
   if (!await sleep(1600, tk)) return;
   setCaption('Wohnung 01 im Gartengeschoss', '4.5 Zimmer, 151.3 m² Wohnfläche');
   liftTarget = 1;
@@ -701,6 +720,9 @@ const furnBtn = document.getElementById('furn');
 furnBtn.addEventListener('click', () => { furn.visible = !furn.visible; furnBtn.classList.toggle('off', !furn.visible); });
 const dimBtn = document.getElementById('dims');
 dimBtn.addEventListener('click', () => { dimsOn = !dimsOn; dims.visible = dimsOn; dimBtn.classList.toggle('off', !dimsOn); });
+const sunInfo = document.getElementById('sunInfo'), monthSel = document.getElementById('month');
+monthSel.innerHTML = MONTHS.map((m, i) => `<option value="${i}"${i === 6 ? ' selected' : ''}>15. ${m[0]}</option>`).join('');
+monthSel.addEventListener('change', () => { setMonth(+monthSel.value); sunHour = THREE.MathUtils.clamp(sunHour, SUNRISE + 0.3, SUNSET - 0.3); sunInput.value = sunHour; applySun(); });
 const sunLabel = document.getElementById('sunLabel'), sunInput = document.getElementById('sun'), sunPlay = document.getElementById('sunPlay');
 let sunRun = false;
 sunInput.addEventListener('input', () => { sunHour = +sunInput.value; applySun(); });
@@ -746,7 +768,7 @@ function frame() {
   for (const m of upperMats) m.opacity = Math.max(0, 1 - lift * 1.7);
   restMat.opacity = 0.35 + 0.65 * op;
   bldBtn.textContent = liftTarget > 0.5 ? 'Gebäude zeigen' : 'Wohnung zeigen';
-  if (sunRun) { sunHour += dt * 0.6; if (sunHour > 21) sunHour = 6; sunInput.value = sunHour; applySun(); }
+  if (sunRun) { sunHour += dt * 0.6; if (sunHour > SUNSET + 0.2 || sunHour < SUNRISE - 0.2) sunHour = SUNRISE - 0.2; sunInput.value = sunHour; applySun(); }
   if (walking) walkStep(dt); else controls.update();
   renderer.render(scene, camera);
   updateLabels();
@@ -755,7 +777,7 @@ function frame() {
 
 camera.position.set(-24, 15, -16); controls.target.set(11, 7, 7);
 frame();
-window.__app = { setWalk, stop, camera, controls, setSun(h) { sunHour = h; sunInput.value = h; applySun(); }, setLift(x) { liftTarget = x; } };
+window.__app = { setWalk, stop, camera, controls, setSun(h, m) { if (m !== undefined) { setMonth(m); monthSel.value = m; } sunHour = h; sunInput.value = h; applySun(); }, setLift(x) { liftTarget = x; } };
 if (matchMedia('(prefers-reduced-motion: reduce)').matches || location.hash === '#still') {
   liftTarget = 1; camera.position.set(-8, 17, 24); controls.target.set(...AC);
   setCaption('Wohnung 01 im Gartengeschoss', 'Tour mit dem Knopf starten');

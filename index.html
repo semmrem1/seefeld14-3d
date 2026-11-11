@@ -55,7 +55,10 @@
   #bar .btns { display:flex; gap:8px; flex-wrap:wrap; }
   .sunrow { display:flex; align-items:center; gap:10px; background:#fff; border-radius:8px; padding:6px 8px 6px 12px;
     box-shadow:0 1px 3px rgba(46,38,41,.18); font-size:13px; font-variant-numeric:tabular-nums; }
-  .sunrow input { width:190px; accent-color:var(--mauve); }
+  .sunrow input { width:170px; accent-color:var(--mauve); }
+  .sunrow select { font:inherit; font-size:13px; border:1px solid var(--line); border-radius:6px; padding:4px 6px; background:#fff; color:var(--ink); }
+  .sunrow #sunLabel { min-width:190px; }
+  #sunInfo { font-size:12px; color:var(--ink); background:rgba(246,242,236,.85); padding:2px 8px; border-radius:6px; margin-bottom:-4px; order:-1; }
   .sunrow button { padding:6px 10px !important; box-shadow:none !important; background:var(--paper) !important; font-size:13px !important; }
   #bar #walk.active { background:var(--ink); color:#fff; }
   .label.dim { background:var(--ink); color:#fff; font-size:11px; padding:1px 5px; border-radius:3px; cursor:default; font-variant-numeric:tabular-nums; }
@@ -83,7 +86,7 @@
     #toggle { display:block; position:absolute; right:14px; top:14px; padding:7px 11px; }
     #bar { left:10px; right:10px; bottom:142px; } #bar button { padding:8px 10px; font-size:13px; }
     #bar .btns { flex-wrap:nowrap; overflow-x:auto; max-width:100%; } #bar .btns button { white-space:nowrap; }
-    .sunrow { font-size:11.5px; max-width:100%; } .sunrow input { width:90px; }
+    .sunrow { font-size:11.5px; max-width:100%; flex-wrap:wrap; gap:6px; } .sunrow input { width:110px; } .sunrow #sunLabel { min-width:0; }
     #hint { left:12px; right:12px; top:70px; font-size:12px; }
     #caption { left:12px; top:12px; max-width:calc(100vw - 24px); } #caption b { font-size:19px; }
     .label { font-size:10.5px; padding:3px 5px; }
@@ -97,10 +100,12 @@
 <div id="hint">Ziehen: umsehen · Boden antippen: hingehen · WASD / Pfeiltasten: laufen · Esc: beenden</div>
 <div id="bar">
   <div class="sunrow">
+    <select id="month" aria-label="Monat"></select>
     <span id="sunLabel"></span>
-    <input id="sun" type="range" min="6" max="21" step="0.05" value="16" aria-label="Tageszeit am 15. Juli">
+    <input id="sun" type="range" min="4.5" max="22" step="0.05" value="16" aria-label="Tageszeit">
     <button id="sunPlay">Tagesverlauf</button>
   </div>
+  <div id="sunInfo"></div>
   <div class="btns">
     <button id="play">Tour anhalten</button>
     <button id="walk">Begehen</button>
@@ -130,11 +135,11 @@
     <ul id="linieText"></ul>
     <div id="groups"></div>
     <p class="note">Inoffizielle Visualisierung, kein Angebot des Verkäufers. Geometrie aus dem Grundriss 1:100 abgegriffen,
-      Masse sind gerundete Circa-Werte. Raumhöhe (2.50 m), Möblierung und Gebäudehülle sind schematisch, Materialfarben den Mustern der Ausbaulinien nachempfunden. Sonnenstand berechnet für Uster am 15. Juli, Ausrichtung gemäss Nordpfeil im Plan. Flächen und Preise gemäss
+      Masse sind gerundete Circa-Werte. Raumhöhe (2.50 m), Möblierung und Gebäudehülle sind schematisch, Materialfarben den Mustern der Ausbaulinien nachempfunden. Sonnenstand berechnet für Uster jeweils am 15. des gewählten Monats, ohne Schatten von Nachbargebäuden, Ausrichtung gemäss Nordpfeil im Plan. Flächen und Preise gemäss
       Verkaufsunterlagen, Stand November 2026, ohne Gewähr. Offizielle Angaben:
       <a href="https://www.seefeldstrasse14.ch/" rel="noopener">seefeldstrasse14.ch</a></p>
   </div>
 </aside>
-<script type="module" src="./src/main.js?v=3"></script>
+<script type="module" src="./src/main.js?v=5"></script>
 </body>
 </html>
