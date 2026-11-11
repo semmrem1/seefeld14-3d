@@ -4,11 +4,11 @@
 // Plan Aussenfläche Gartenwohnung. Angaben ohne Gewähr.
 
 // Der Grundriss wurde aus dem Plan 1:100 abgegriffen (Pixel -> Meter).
-const PX_PER_M = 37.2;
+const PX_PER_M = 38.0; // kalibriert an der Gebäudetiefe 13.80 m gemäss Plan
 const OX = 78, OZ = 30;
 export const mx = (px) => (px - OX) / PX_PER_M;
 export const mz = (py) => (py - OZ) / PX_PER_M;
-const r = (x0, x1, z0, z1) => ({ x0: mx(x0), x1: mx(x1), z0: mz(z0), z1: mz(z1) });
+export const r = (x0, x1, z0, z1) => ({ x0: mx(x0), x1: mx(x1), z0: mz(z0), z1: mz(z1) });
 
 export const WALL_H = 2.5; // Annahme, Raumhöhe ist in den Unterlagen nicht angegeben
 
@@ -64,23 +64,28 @@ export const BUILDING_LEN = 27.34; // Gebäudelänge gemäss Plan
 // Möblierung nur zur Veranschaulichung (nicht im Kaufpreis)
 const f = (x0, x1, z0, z1, h, color, y = 0) => ({ ...r(x0, x1, z0, z1), h, color, y });
 export const furniture = [
-  f(232, 256, 92, 138, 0.92, 0xe9e4dc),            // Kochinsel
-  f(299, 321, 52, 186, 2.15, 0xd9d2c7),            // Küchenzeile hoch
-  f(331, 385, 88, 152, 0.45, 0xcdbfb3),            // Bett Zimmer 1
-  f(468, 489, 120, 186, 2.1, 0xe6e0d6),            // Schrank Zimmer 1
-  f(508, 570, 52, 80, 0.55, 0xffffff),             // Badewanne
-  f(505, 522, 100, 152, 0.85, 0xe6e0d6),           // Lavabo Bad
+  f(331, 385, 88, 152, 0.45, 0xd8d2ca),            // Bett Zimmer 1
+  f(468, 489, 120, 186, 2.1, 'gard'),              // Schrank Zimmer 1
   f(120, 186, 245, 272, 0.42, 0x8f8478),           // Sofa 1
   f(120, 186, 330, 357, 0.42, 0x8f8478),           // Sofa 2
   f(134, 172, 290, 312, 0.3, 0x6b5a4e),            // Salontisch
-  f(98, 132, 418, 492, 0.45, 0xcdbfb3),            // Bett Zimmer 3
+  f(98, 132, 418, 492, 0.45, 0xd8d2ca),            // Bett Zimmer 3
   f(218, 268, 502, 530, 0.74, 0x9b8469),           // Pult Zimmer 3
-  f(350, 412, 440, 502, 0.45, 0xcdbfb3),           // Bett Zimmer 2
-  f(310, 331, 336, 402, 2.1, 0xe6e0d6),            // Schrank Zimmer 2
-  f(365, 427, 201, 224, 2.15, 0xe6e0d6),           // Einbauschränke Entrée
-  f(441, 497, 291, 312, 2.15, 0xe6e0d6),           // Garderobenschrank
-  f(540, 592, 296, 312, 0.85, 0xe6e0d6),           // Lavabo Dusche
+  f(350, 412, 440, 502, 0.45, 0xd8d2ca),           // Bett Zimmer 2
+  f(310, 331, 336, 402, 2.1, 'gard'),              // Schrank Zimmer 2
+  f(365, 427, 201, 224, 2.15, 'gard'),             // Einbauschränke Entrée
+  f(441, 497, 291, 312, 2.15, 'gard'),             // Garderobenschrank
   f(322, 352, 232, 263, 1.75, 0xf4f4f2),           // Waschturm
+];
+
+// Ausbaulinien gemäss PDF "Ausbaulinien" (je drei Optionen pro Gattung)
+export const ausbaulinien = [
+  { name: 'Option 1', parkett: 0xd2b596, nass: 0xcbb5a3, platten: 0xe6e1da, front: 0xa69b8e, stone: 0xe6e6e2, speck: 0.25, gard: 0xb9b5aa,
+    text: ['Parkett Eiche RMC Neutral R2020', 'Nasszellen Iamara Cayman Cappuccino', 'Platten Colom Creme', 'Küchenfront Graubraun', 'Naturstein London White', 'Garderobe Kieselgrau'] },
+  { name: 'Option 2', parkett: 0xd0a070, nass: 0xd9cfbd, platten: 0xbcbebe, front: 0x3b3c39, stone: 0xdcdcde, speck: 0.9, gard: 0x8e8c87,
+    text: ['Parkett Eiche RMC Sand 5% R2023', 'Nasszellen Iamara Espalmador Sand', 'Platten Colom Perlgrau', 'Küchenfront matt Graphit', 'Naturstein Blanco Castilla', 'Garderobe Grigio Lava'] },
+  { name: 'Option 3', parkett: 0x7a6c62, nass: 0xab9d8d, platten: 0x414243, front: 0xd2cdc0, stone: 0x3a3e3f, speck: 0.35, gard: 0xd2d2ce,
+    text: ['Parkett Eiche RMC Charcoal R305', 'Nasszellen Iamara Espalmador Taupe', 'Platten Colom Anthrazit', 'Küchenfront Ecru', 'Naturstein New Angola', 'Garderobe Lichtgrau'] },
 ];
 export const diningTable = { x: mx(158), z: mz(128), r: 0.68 };
 
