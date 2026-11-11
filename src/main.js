@@ -286,34 +286,34 @@ const mirror = mat(0xd4e3ea, { roughness: 0.08, metalness: 0.15 });
 {
   const front = useMat('front'), stone = useMat('stone');
   // Kochinsel mit Natursteinabdeckung und Kochfeld
-  const isl = r(230, 258, 90, 140);
+  const isl = r(705, 768, 213, 338);
   fitout.add(box({ x0: isl.x0 + 0.03, x1: isl.x1 - 0.03, z0: isl.z0 + 0.03, z1: isl.z1 - 0.03 }, 0.1, 0.88, front));
   fitout.add(box(isl, 0.88, 0.92, stone));
-  fitout.add(box(r(236, 252, 100, 124), 0.92, 0.93, dark));
+  fitout.add(box(r(720, 760, 240, 290), 0.92, 0.93, dark));
   // Küchenzeile an der Wand: Hochschränke aussen, Arbeitsfläche mit Spüle in der Mitte
-  fitout.add(box(r(299, 321, 50, 92), 0.1, 2.2, front));
-  fitout.add(box(r(299, 321, 150, 188), 0.1, 2.2, front));
-  fitout.add(box(r(299.5, 321, 92, 150), 0.1, 0.88, front));
-  fitout.add(box(r(298.5, 321, 92, 150), 0.88, 0.92, stone));
-  fitout.add(box(r(320, 321, 92, 150), 0.92, 1.45, stone));            // Rückwand
-  fitout.add(box(r(307, 321, 92, 150), 1.45, 2.2, front));              // Oberschränke
-  fitout.add(box(r(304, 316, 112, 130), 0.9, 0.925, steel));            // Spülbecken
-  fitout.add(box(r(298.6, 299, 56, 88), 0.75, 1.3, dark));              // Backofen
-  fitout.add(box(r(298.6, 299, 56, 88), 1.36, 1.82, dark));             // Kombisteamer
-  fitout.add(box(r(300, 321, 50, 188), 0, 0.1, dark));                  // Sockel
+  fitout.add(box(r(852, 895, 167, 215), 0.1, 2.2, front));
+  fitout.add(box(r(852, 895, 375, 422), 0.1, 2.2, front));
+  fitout.add(box(r(853, 895, 215, 375), 0.1, 0.88, front));
+  fitout.add(box(r(850, 895, 215, 375), 0.88, 0.92, stone));
+  fitout.add(box(r(893, 895, 215, 375), 0.92, 1.45, stone));            // Rückwand
+  fitout.add(box(r(868, 895, 215, 375), 1.45, 2.2, front));              // Oberschränke
+  fitout.add(box(r(858, 885, 295, 335), 0.9, 0.925, steel));            // Spülbecken
+  fitout.add(box(r(851, 852, 176, 208), 0.75, 1.3, dark));              // Backofen
+  fitout.add(box(r(851, 852, 176, 208), 1.36, 1.82, dark));             // Kombisteamer
+  fitout.add(box(r(855, 895, 167, 422), 0, 0.1, dark));                 // Sockel
   // Bad / WC
-  const tub = r(507, 571, 50, 82);
+  const tub = r(1232, 1352, 170, 218);
   fitout.add(box(tub, 0, 0.56, white));
   fitout.add(box({ x0: tub.x0 + 0.08, x1: tub.x1 - 0.08, z0: tub.z0 + 0.08, z1: tub.z1 - 0.08 }, 0.5, 0.565, mat(0xe9eef0, { roughness: 0.1 })));
-  fitout.add(box(r(504, 523, 98, 154), 0.45, 0.85, white));             // Doppelwaschtisch
-  fitout.add(box(r(503.2, 508, 98, 154), 1.15, 1.85, mirror));          // Spiegelschrank
-  fitout.add(box(r(504, 524, 166, 182), 0.2, 0.42, white));             // WC
-  // Dusche / WC
-  fitout.add(box(r(538, 594, 296, 313), 0.45, 0.85, white));
-  fitout.add(box(r(538, 594, 295.3, 299), 1.15, 1.85, mirror));
-  fitout.add(box(r(507, 525, 296, 318), 0.2, 0.42, white));
-  const sg = box(r(601, 602.5, 296, 350), 0, 2.0, glassMat); sg.castShadow = false; fitout.add(sg);
-  fitout.add(box(r(640, 643, 328, 336), 0.9, 2.1, steel));              // Brausestange
+  fitout.add(box(r(1229, 1262, 255, 345), 0.45, 0.85, white));          // Doppelwaschtisch
+  fitout.add(box(r(1228.5, 1237, 255, 345), 1.15, 1.85, mirror));       // Spiegelschrank
+  fitout.add(box(r(1230, 1268, 372, 402), 0.2, 0.42, white));           // WC
+  // Dusche / WC (En-suite zu Zimmer 2)
+  fitout.add(box(r(1295, 1385, 615, 647), 0.45, 0.85, white));
+  fitout.add(box(r(1295, 1385, 614.3, 622), 1.15, 1.85, mirror));
+  fitout.add(box(r(1250, 1277, 615, 658), 0.2, 0.42, white));
+  const sg = box(r(1429, 1432, 614, 700), 0, 2.0, glassMat); sg.castShadow = false; fitout.add(sg);
+  fitout.add(box(r(1484, 1490, 670, 684), 0.9, 2.1, steel));            // Brausestange
 }
 const gardMat = useMat('gard');
 for (const q of furniture) furn.add(box(q, q.y, q.y + q.h, q.color === 'gard' ? gardMat : mat(q.color)));
@@ -587,7 +587,7 @@ async function tour() {
 
 // ---------- Begehen (Ich-Perspektive) ----------
 const EYE = 1.62;
-const LOOK = { kueche: [-1, 0.15], wohnen: [-0.55, -0.85], zimmer1: [-0.2, -1], zimmer2: [0.1, 1], zimmer3: [-0.3, 1], korridor: [-1, 0.1], bad: [-0.3, -1], dusche: [1, 0.2], garderobe: [1, 0.3], abstell: [1, 0.2] };
+const LOOK = { kueche: [-1, 0.15], wohnen: [-0.55, -0.85], zimmer1: [-0.2, -1], zimmer2: [0.1, 1], zimmer3: [-0.3, 1], korridor: [-1, 0.1], bad: [-0.3, -1], dusche: [1, 0.2], garderobe: [1, -0.2], abstell: [0.6, 1] };
 function standIn(id) {
   const c = centers[id], q = rooms.find((x) => x.id === id).rects[0], [dx, dz] = LOOK[id], n = Math.hypot(dx, dz);
   let k = 0.32;

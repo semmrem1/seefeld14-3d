@@ -3,57 +3,59 @@
 // Verkaufsdokumentation 02.11.2026, Käuferbaubeschrieb 04.11.2026,
 // Plan Aussenfläche Gartenwohnung. Angaben ohne Gewähr.
 
-// Der Grundriss wurde aus dem Plan 1:100 abgegriffen (Pixel -> Meter).
-const PX_PER_M = 38.0; // kalibriert an der Gebäudetiefe 13.80 m gemäss Plan
-const OX = 78, OZ = 30;
+// Der Grundriss wurde aus dem Plan 1:100 abgegriffen (Pixel bei 300 % -> Meter).
+// Massstab kalibriert an den Raumflächen und der Gebäudetiefe 13.80 m.
+const PX_PER_M = 69.1;
+const OX = 446, OZ = 128;
 export const mx = (px) => (px - OX) / PX_PER_M;
 export const mz = (py) => (py - OZ) / PX_PER_M;
 export const r = (x0, x1, z0, z1) => ({ x0: mx(x0), x1: mx(x1), z0: mz(z0), z1: mz(z1) });
 
 export const WALL_H = 2.5; // Annahme, Raumhöhe ist in den Unterlagen nicht angegeben
 
-// Aussenkontur der Wohnung als Vereinigung von Rechtecken
-export const outline = [r(78, 585, 30, 385), r(585, 660, 200, 385), r(78, 445, 385, 555)];
+// Aussenkontur der Wohnung: oberer Teil, Mittelteil mit Entrée, unterer Teil
+export const outline = [r(446, 1386, 128, 441), r(446, 1515, 441, 771), r(446, 1120, 771, 1086)];
 
 export const rooms = [
-  { id: 'kueche', name: 'Küche / Essen', area: 23.3, fenster: 13.0, floor: 'parkett', rects: [r(95, 322, 48, 190)],
+  { id: 'kueche', name: 'Küche / Essen', area: 23.3, fenster: 13.0, floor: 'parkett', rects: [r(468, 895, 167, 422)],
     note: 'Jahreszeitenzimmer: Fensterfront zur Terrasse vollständig öffenbar' },
-  { id: 'wohnen', name: 'Wohnen', area: 28.1, fenster: 4.3, floor: 'parkett', rects: [r(95, 245, 190, 405), r(245, 300, 270, 405)],
+  { id: 'wohnen', name: 'Wohnen', area: 28.1, fenster: 4.3, floor: 'parkett', rects: [r(480, 750, 422, 817), r(750, 857, 565, 817)],
     note: 'Offen zu Küche / Essen' },
-  { id: 'zimmer1', name: 'Zimmer 1', area: 15.7, fenster: 4.3, floor: 'parkett', rects: [r(330, 490, 48, 190)], note: 'Direkt neben Bad / WC' },
-  { id: 'zimmer2', name: 'Zimmer 2', area: 17.2, fenster: 3.4, floor: 'parkett', rects: [r(308, 432, 325, 540)], note: '' },
-  { id: 'zimmer3', name: 'Zimmer 3', area: 17.6, fenster: 4.3, floor: 'parkett', rects: [r(95, 300, 412, 540)], note: '' },
-  { id: 'korridor', name: 'Entrée / Korridor', area: 19.4, floor: 'parkett', rects: [r(360, 648, 200, 283), r(300, 437, 265, 320)],
+  { id: 'zimmer1', name: 'Zimmer 1', area: 15.7, fenster: 4.3, floor: 'parkett', rects: [r(906, 1200, 167, 422)], note: 'Zugang vom Korridor, neben Bad / WC' },
+  { id: 'zimmer2', name: 'Zimmer 2', area: 17.2, fenster: 3.4, floor: 'parkett', rects: [r(868, 1088, 675, 1047)],
+    note: 'Elternzimmer mit Ankleide und eigener Dusche / WC' },
+  { id: 'zimmer3', name: 'Zimmer 3', area: 17.6, fenster: 4.3, floor: 'parkett', rects: [r(480, 857, 829, 1047)], note: 'Zugang vom Wohnen' },
+  { id: 'korridor', name: 'Entrée / Korridor', area: 19.4, floor: 'parkett', rects: [r(970, 1493, 434, 585), r(857, 1090, 565, 663)],
     note: 'Wohnungseingang auf der Ostseite, Einbauschränke' },
-  { id: 'bad', name: 'Bad / WC', area: 6.7, floor: 'platten', rects: [r(503, 572, 48, 190)], note: 'Badewanne, Doppellavabo' },
-  { id: 'dusche', name: 'Dusche / WC', area: 7.0, floor: 'platten', rects: [r(503, 648, 295, 370)], note: 'Bodenebene Dusche, Doppellavabo' },
-  { id: 'garderobe', name: 'Garderobe', area: 3.7, floor: 'platten', rects: [r(441, 497, 290, 370)], note: 'Vorraum zur Dusche' },
-  { id: 'abstell', name: 'Abstellraum', area: 4.8, floor: 'platten', rects: [r(251, 355, 200, 265)], note: 'Waschturm (Waschmaschine / Tumbler)' },
+  { id: 'bad', name: 'Bad / WC', area: 6.7, floor: 'platten', rects: [r(1228, 1354, 167, 422)], note: 'Badewanne, Doppellavabo, Zugang vom Korridor' },
+  { id: 'dusche', name: 'Dusche / WC', area: 7.0, floor: 'platten', rects: [r(1229, 1493, 614, 739)], note: 'Zugang nur über die Ankleide von Zimmer 2' },
+  { id: 'garderobe', name: 'Ankleide', area: 3.7, floor: 'platten', rects: [r(1100, 1223, 597, 739)], note: 'Zugang von Zimmer 2, Durchgang zur Dusche' },
+  { id: 'abstell', name: 'Abstellraum', area: 4.8, floor: 'platten', rects: [r(760, 950, 434, 553)], note: 'Zugang von der Küche, Waschturm' },
 ];
 
 // Durchgänge und Türen (Wandöffnungen über die ganze Höhe)
 export const openings = [
-  r(432, 465, 188, 202),  // Zimmer 1
-  r(535, 568, 188, 202),  // Bad
-  r(243, 253, 203, 238),  // Abstellraum
-  r(245, 280, 403, 414),  // Zimmer 3
-  r(333, 366, 318, 327),  // Zimmer 2
-  r(445, 478, 281, 292),  // Garderobe
-  r(495, 505, 330, 364),  // Dusche
-  r(646, 662, 220, 262),  // Wohnungstür
+  r(1090, 1150, 420, 436),   // Korridor -> Zimmer 1
+  r(1290, 1352, 420, 436),   // Korridor -> Bad
+  r(762, 825, 420, 436),     // Küche -> Abstellraum
+  r(745, 807, 815, 831),     // Wohnen -> Zimmer 3
+  r(918, 978, 661, 677),     // Korridor -> Zimmer 2
+  r(1086, 1102, 674, 737),   // Zimmer 2 -> Ankleide
+  r(1221, 1231, 600, 668),   // Ankleide -> Dusche
+  r(1491, 1517, 478, 550),   // Wohnungstür
 ];
 
 // Fenster (raumhoch, Glas)
 export const windows = [
-  r(180, 255, 28, 50), r(350, 430, 28, 50),          // oben: Küche, Zimmer 1
-  r(76, 97, 55, 185), r(76, 97, 290, 370),           // links: Jahreszeitenzimmer, Wohnen
-  r(145, 215, 538, 557), r(305, 380, 538, 557),      // unten: Zimmer 3, Zimmer 2
+  r(640, 770, 126, 169), r(952, 1082, 126, 169),       // oben: Küche, Zimmer 1
+  r(444, 470, 167, 422), r(444, 482, 604, 734),        // links: Jahreszeitenzimmer, Wohnen
+  r(567, 697, 1045, 1088), r(868, 1000, 1045, 1088),   // unten: Zimmer 3, Zimmer 2
 ];
 
-export const terrace = { ...r(30, 78, 45, 185), area: 5.5 };
+export const terrace = { ...r(366, 446, 158, 432), area: 5.5 };
 
 // Privater Garten 97.0 m2 gemäss Plan "Angabe Aussenfläche Gartenwohnung"
-const D = mz(555);
+const D = mz(1086);
 export const garden = { area: 97.0, rects: [
   { x0: -3.5, x1: 0, z0: 0, z1: D + 4.2 },
   { x0: 0, x1: 7.9, z0: D, z1: D + 4.2 },
@@ -64,18 +66,19 @@ export const BUILDING_LEN = 27.34; // Gebäudelänge gemäss Plan
 // Möblierung nur zur Veranschaulichung (nicht im Kaufpreis)
 const f = (x0, x1, z0, z1, h, color, y = 0) => ({ ...r(x0, x1, z0, z1), h, color, y });
 export const furniture = [
-  f(331, 385, 88, 152, 0.45, 0xd8d2ca),            // Bett Zimmer 1
-  f(468, 489, 120, 186, 2.1, 'gard'),              // Schrank Zimmer 1
-  f(120, 186, 245, 272, 0.42, 0x8f8478),           // Sofa 1
-  f(120, 186, 330, 357, 0.42, 0x8f8478),           // Sofa 2
-  f(134, 172, 290, 312, 0.3, 0x6b5a4e),            // Salontisch
-  f(98, 132, 418, 492, 0.45, 0xd8d2ca),            // Bett Zimmer 3
-  f(218, 268, 502, 530, 0.74, 0x9b8469),           // Pult Zimmer 3
-  f(350, 412, 440, 502, 0.45, 0xd8d2ca),           // Bett Zimmer 2
-  f(310, 331, 336, 402, 2.1, 'gard'),              // Schrank Zimmer 2
-  f(365, 427, 201, 224, 2.15, 'gard'),             // Einbauschränke Entrée
-  f(441, 497, 291, 312, 2.15, 'gard'),             // Garderobenschrank
-  f(322, 352, 232, 263, 1.75, 0xf4f4f2),           // Waschturm
+  f(908, 1048, 235, 357, 0.45, 0xd8d2ca),          // Bett Zimmer 1
+  f(1156, 1198, 295, 420, 2.1, 'gard'),            // Schrank Zimmer 1
+  f(521, 646, 517, 569, 0.42, 0x8f8478),           // Sofa 1
+  f(521, 646, 672, 724, 0.42, 0x8f8478),           // Sofa 2
+  f(549, 618, 604, 639, 0.3, 0x6b5a4e),            // Salontisch
+  f(517, 622, 786, 814, 0.45, 0x6b5a4e),           // Sideboard
+  f(483, 545, 831, 971, 0.45, 0xd8d2ca),           // Bett Zimmer 3
+  f(698, 795, 995, 1044, 0.74, 0x9b8469),          // Pult Zimmer 3
+  f(947, 1087, 869, 991, 0.45, 0xd8d2ca),          // Bett Zimmer 2
+  f(870, 912, 677, 801, 2.1, 'gard'),              // Schrank Zimmer 2
+  f(972, 1087, 436, 474, 2.15, 'gard'),            // Einbauschränke Entrée
+  f(1100, 1222, 597, 637, 2.15, 'gard'),           // Schränke Ankleide
+  f(902, 945, 507, 547, 1.75, 0xf4f4f2),           // Waschturm
 ];
 
 // Ausbaulinien gemäss PDF "Ausbaulinien" (je drei Optionen pro Gattung)
@@ -87,7 +90,7 @@ export const ausbaulinien = [
   { name: 'Option 3', parkett: 0x7a6c62, nass: 0xab9d8d, platten: 0x414243, front: 0xd2cdc0, stone: 0x3a3e3f, speck: 0.35, gard: 0xd2d2ce,
     text: ['Parkett Eiche RMC Charcoal R305', 'Nasszellen Iamara Espalmador Taupe', 'Platten Colom Anthrazit', 'Küchenfront Ecru', 'Naturstein New Angola', 'Garderobe Lichtgrau'] },
 ];
-export const diningTable = { x: mx(158), z: mz(128), r: 0.68 };
+export const diningTable = { x: mx(595), z: mz(295), r: 0.62 };
 
 export const facts = {
   titel: 'Wohnung 01',
