@@ -3,7 +3,7 @@ import { OrbitControls } from './../vendor/OrbitControls.js';
 import {
   rooms, outline, openings, windows, terrace, garden, furniture, diningTable, ausbaulinien,
   facts, WALL_H, DEPTH, BUILDING_LEN, r,
-} from './data.js';
+} from './data.js?v=3';
 
 const canvas = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
