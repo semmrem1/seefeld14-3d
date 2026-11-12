@@ -13,6 +13,7 @@ Läuft direkt im Browser, ohne Build-Schritt.
 - Drei Ausbaulinien für Böden, Küche und Nasszellen umschaltbar
 - Sonnenstand für Uster mit Monatswahl und Regler für die Tageszeit
 - Eckdaten zu Preis, Flächen, Haustechnik, Terminen und Lage
+- Seite "Alle Unterlagen" (`unterlagen.html`): Zahlungsplan, Kaufvertrag, Reservation, Reglement, Garage, Grundbuch, Küche, Baubeschrieb, alle Preise, Volltextsuche und die PDF-Dokumente unter `docs/`
 
 ## Hinweise
 

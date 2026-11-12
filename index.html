@@ -48,6 +48,9 @@
   summary::-webkit-details-marker { display:none; }
   dl { margin:0 0 12px; } dl div { display:flex; gap:12px; justify-content:space-between; padding:4px 0; font-size:13.5px; }
   dt { color:var(--muted); flex:0 0 42%; } dd { margin:0; text-align:right; }
+  #docsLink { display:block; padding:11px 22px; background:var(--mauve); color:#fff; text-decoration:none; font-weight:600; font-size:14px; }
+  #docsLink span { display:block; font-weight:400; font-size:12px; color:#eadfe3; }
+  #docsLink:hover { background:#5d4650; }
   .note { font-size:12px; color:var(--muted); margin-top:16px; }
   .note a { color:var(--mauve); }
 
@@ -81,6 +84,7 @@
     #panel { top:auto; left:0; width:auto; height:72vh; border-left:0; border-top:1px solid var(--line); border-radius:14px 14px 0 0;
       transform:translateY(calc(100% - 132px)); transition:transform .3s; }
     #panel.open { transform:none; }
+    #docsLink { padding:8px 18px; font-size:13px; } #docsLink span { display:none; }
     header { padding:14px 18px 10px; } h1 { font-size:22px; } .kpis div { padding:8px 18px; } .kpis b { font-size:16px; }
     .scroll { padding:6px 18px 20px; }
     #toggle { display:block; position:absolute; right:14px; top:14px; padding:7px 11px; }
@@ -121,11 +125,12 @@
     <p>4.5 Zimmer · Gartengeschoss · Neubau</p>
     <button id="toggle">Details</button>
   </header>
+  <a id="docsLink" href="./unterlagen.html">Alle Unterlagen, Verträge und Pläne<span>Zahlungsplan, Kaufvertrag, Reglement, Küche, 20 PDF</span></a>
   <div class="kpis">
     <div><b>CHF 1'890'000</b><span>Verkaufspreis</span></div>
     <div><b>151.3 m²</b><span>Wohnfläche</span></div>
     <div><b>97.0 m²</b><span>Garten privat</span></div>
-    <div><b>Ende 2028</b><span>Bezug</span></div>
+    <div><b>Ab Okt. 2028</b><span>Bezug (bis Jan. 2029)</span></div>
   </div>
   <div class="scroll">
     <h2>Räume</h2>
@@ -140,6 +145,6 @@
       <a href="https://www.seefeldstrasse14.ch/" rel="noopener">seefeldstrasse14.ch</a></p>
   </div>
 </aside>
-<script type="module" src="./src/main.js?v=5"></script>
+<script type="module" src="./src/main.js?v=6"></script>
 </body>
 </html>

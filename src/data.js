@@ -1,7 +1,8 @@
 // Alle Angaben zur Wohnung 01, Seefeldstrasse 14, 8610 Uster.
 // Quellen: seefeldstrasse14.ch, Verkaufspreisliste 26.10.2026,
 // Verkaufsdokumentation 02.11.2026, Käuferbaubeschrieb 04.11.2026,
-// Plan Aussenfläche Gartenwohnung. Angaben ohne Gewähr.
+// Plan Aussenfläche Gartenwohnung, Vertrags- und Detailunterlagen vom 12.11.2026
+// (siehe unterlagen.html). Angaben ohne Gewähr.
 
 // Der Grundriss wurde aus dem Plan 1:100 abgegriffen (Pixel bei 300 % -> Meter).
 // Massstab kalibriert an den Raumflächen und der Gebäudetiefe 13.80 m.
@@ -130,18 +131,49 @@ export const facts = {
     ] },
     { titel: 'Gebäude', zeilen: [
       ['Projekt', 'Ersatzneubau mit 11 Eigentumswohnungen'],
-      ['Geschosse', 'UG, Gartengeschoss, EG, 1. und 2. OG, Dachgeschoss'],
+      ['Geschosse', 'UG, Gartengeschoss, EG, 1. und 2. OG, 1. und 2. Dachgeschoss'],
       ['Fassade', 'Holzfassade, Satteldach mit Quergiebel'],
-      ['Erschliessung', 'Lift, Einstellhalle mit Autolift, Veloraum'],
-      ['Grundstück', 'Kat. Nr. C2738'],
+      ['Erschliessung', 'Lift, Einstellhalle mit Autolift (2.10 m), Veloraum im Gartengeschoss'],
+      ['Grundstück', 'Kat. Nr. C2738, 858 m², Grundbuch Blatt 8507'],
+      ['Baubewilligung', 'Stadt Uster, 18.11.2025, rechtskräftig'],
+    ] },
+    { titel: 'Auskünfte vom 12.11.2026', zeilen: [
+      ['Veloraum', 'Zugang über den Autolift'],
+      ['Sitzplatz', 'Plattenbereich laut Verkäufer noch anpassbar'],
+      ['Standardausbau', 'Rabattvereinbarung, 2 % auf den Werkpreis'],
+      ['Individueller Ausbau', 'Käufervereinbarung und Budgetliste'],
+    ] },
+    { titel: 'Zahlungsplan (mit Parkplatz)', zeilen: [
+      ['Reservation', "CHF 50'000"],
+      ['Beurkundung, ca. Feb. 2027', "CHF 947'250 (Land 633'000, 25 % Werk 314'250)"],
+      ['Rohbau, ca. Feb. 2028', "CHF 314'250 (25 %)"],
+      ['Elektro, ca. April 2028', "CHF 251'400 (20 %)"],
+      ['Unterlagsböden, ca. Juni 2028', "CHF 251'400 (20 %)"],
+      ['Schlusszahlung, ca. Okt. 2028', "CHF 125'700 (10 %)"],
+      ['Total', "CHF 1'940'000"],
     ] },
     { titel: 'Termine und Ablauf', zeilen: [
+      ['Reservation gültig bis', '31.03.2027 (Beurkundung spätestens dann)'],
       ['Baubeginn', 'voraussichtlich Februar / März 2027'],
-      ['Bezug', 'Ende 2028'],
-      ['Reservation', "Anzahlung CHF 50'000"],
-      ['Beurkundung', 'Landanteil und 25 % des Werkpreises'],
-      ['Rest', '75 % des Werkpreises in 4 Teilzahlungen nach Baufortschritt'],
-      ['Garantie', '5 Jahre, Garantieabnahme nach 2 Jahren'],
+      ['Bezugsbereitschaft', '01.10.2028 bis 31.01.2029, Anzeige 3 Monate vorher'],
+      ['Zahlungsversprechen', 'Bank, gültig bis mind. 31.01.2029'],
+      ['Rückzug nach Reservation', "CHF 20'000 verfallen"],
+      ['Garantie', 'Rügefrist 2 Jahre, verdeckte Mängel 5 Jahre'],
+    ] },
+    { titel: 'Stockwerkeigentum', zeilen: [
+      ['Grundbuch', 'Blatt 53402, amtliche Whg.-Nr. 9901'],
+      ['Kostenanteil Wohnhaus', '113 / 1000'],
+      ['Garten und Sitzplatz', 'ausschliessliches Benutzungsrecht, Bepflanzung nicht veränderbar'],
+      ['Erneuerungsfonds', 'ab 3. Betriebsjahr, bis 0.25 % des Versicherungswerts pro Jahr'],
+      ['Kurzzeitvermietung', 'nicht erlaubt (z.B. Airbnb)'],
+      ['Solarstrom', 'Zusammenschluss zum Eigenverbrauch (ZEV)'],
+    ] },
+    { titel: 'Küche Standard', zeilen: [
+      ['Lieferant', 'LD Küchen GmbH, Uster'],
+      ['Anordnung', 'Zeile 3.65 m, Kochinsel 1.84 m'],
+      ['Front', 'PerfectSense Graubraun'],
+      ['Abdeckung', 'Granit New Angola, poliert'],
+      ['Geräte', 'Electrolux: Induktion mit Dunstabzug, Backofen, Steamer, Geschirrspüler, Kühlschrank 275 l'],
     ] },
     { titel: 'Lage', zeilen: [
       ['Bus', 'Haltestelle Niederuster (Linie 816), ca. 200 m'],
@@ -152,8 +184,9 @@ export const facts = {
     ] },
     { titel: 'Beteiligte', zeilen: [
       ['Verkauf', 'Dettwyler Development AG, Küsnacht'],
+      ['Landeigentümerin', 'Dettwyler Immobilien GmbH, Küsnacht'],
       ['Totalunternehmung', 'Piiri AG, Zürich'],
-      ['Generalunternehmung', 'Werubau AG, Meilen'],
+      ['Generalunternehmung', 'Werubau AG, Meilen (Bauleitung und Käuferbetreuung)'],
       ['Architektur', 'Jäger Zäh Architekten, Zürich'],
     ] },
   ],
