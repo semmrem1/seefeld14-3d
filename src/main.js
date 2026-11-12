@@ -4,7 +4,7 @@ import {
   rooms, outline, openings, windows, terrace, garden, furniture, diningTable, ausbaulinien,
   gardenTable, washTower, shelves,
   facts, WALL_H, DEPTH, BUILDING_LEN, r,
-} from './data.js?v=7';
+} from './data.js?v=8';
 
 const canvas = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
@@ -136,6 +136,7 @@ const box = (q, y0, y1, material) => {
   m.castShadow = true; m.receiveShadow = true;
   return m;
 };
+const part = (group, x0, x1, z0, z1, y0, y1, material) => { const m = box({ x0, x1, z0, z1 }, y0, y1, material); group.add(m); return m; };
 // Bodenfläche mit UV in Metern, damit Plattenformate massstäblich sind
 const floorTargets = [];
 function floor(q, material, tx, tz, y = 0.02) {
@@ -207,8 +208,9 @@ const tree = (x, z, s = 1) => {
 for (const q of outline) { const m = box(q, -0.2, 0, mat(0x9a9189)); m.castShadow = false; apartment.add(m); }
 const roomFloors = {};
 for (const room of rooms) {
-  const key = room.floor === 'parkett' ? 'parkett' : room.id === 'abstell' ? 'platten' : 'nass';
+  const key = room.floor === 'parkett' ? 'parkett' : (room.id === 'abstell' || room.id === 'kueche') ? 'platten' : 'nass';
   const m = useMat(key);
+  if (room.id === 'kueche') { m.map = tileTex.clone(); m.map.rotation = Math.PI / 4; m.map.needsUpdate = true; } // diagonal verlegt wie in den Perspektiven
   const [tx, tz] = key === 'parkett' ? [3.8, 1.52] : key === 'platten' ? [0.6, 0.6] : [0.6, 0.3];
   for (const q of room.rects) apartment.add(floor(q, m, tx, tz));
   roomFloors[room.id] = m;
@@ -300,22 +302,81 @@ const dark = mat(0x1d1f21, { roughness: 0.3 });
 const mirror = mat(0xd4e3ea, { roughness: 0.08, metalness: 0.15 });
 {
   const front = useMat('front'), stone = useMat('stone');
-  // Kochinsel mit Natursteinabdeckung und Kochfeld
-  const isl = r(705, 768, 213, 338);
-  fitout.add(box({ x0: isl.x0 + 0.03, x1: isl.x1 - 0.03, z0: isl.z0 + 0.03, z1: isl.z1 - 0.03 }, 0.1, 0.88, front));
-  fitout.add(box(isl, 0.88, 0.92, stone));
-  fitout.add(box(r(720, 760, 240, 290), 0.92, 0.93, dark));
-  // Küchenzeile an der Wand: Hochschränke aussen, Arbeitsfläche mit Spüle in der Mitte
-  fitout.add(box(r(852, 895, 167, 215), 0.1, 2.2, front));
-  fitout.add(box(r(852, 895, 375, 422), 0.1, 2.2, front));
-  fitout.add(box(r(853, 895, 215, 375), 0.1, 0.88, front));
-  fitout.add(box(r(850, 895, 215, 375), 0.88, 0.92, stone));
-  fitout.add(box(r(893, 895, 215, 375), 0.92, 1.45, stone));            // Rückwand
-  fitout.add(box(r(868, 895, 215, 375), 1.45, 2.2, front));              // Oberschränke
-  fitout.add(box(r(858, 885, 295, 335), 0.9, 0.925, steel));            // Spülbecken
-  fitout.add(box(r(851, 852, 176, 208), 0.75, 1.3, dark));              // Backofen
-  fitout.add(box(r(851, 852, 176, 208), 1.36, 1.82, dark));             // Kombisteamer
-  fitout.add(box(r(855, 895, 167, 422), 0, 0.1, dark));                 // Sockel
+  const plinth = mat(0x6f665c), gap = mat(0x5e554c), glass = mat(0x14161a, { roughness: 0.12, metalness: 0.4 });
+  const ovenWin = mat(0x2c3138, { roughness: 0.1, metalness: 0.5 }), basin = mat(0x8e9499, { roughness: 0.35, metalness: 0.8 });
+  const led = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff2d0, emissiveIntensity: 1.5 });
+  const K = r(0, 895, 167, 422);                      // Ostwand und Raumtiefe der Küche
+  const xE = K.x1, zN = K.z0 + 0.02;
+  // ----- Küchenzeile 3.65 m gemäss Offerte LD Küchen: Hochschrank Backofen/Steamer, 4 Unterschränke, Hochschrank Kühlschrank
+  const xF = xE - 0.6, xW = xE - 0.62;                 // Frontebene und Vorderkante Arbeitsplatte
+  const zT1 = zN + 0.056, zB0 = zT1 + 0.619, zB1 = zB0 + 2.3, zT2 = zB1 + 0.019, zEnd = zT2 + 0.6;
+  part(fitout, xE - 0.55, xE, zN, zEnd + 0.056, 0, 0.125, plinth);
+  part(fitout, xF, xE, zN, zB0, 0.125, 2.154, front);                      // Hochschrank Nord inkl. Passstück
+  part(fitout, xF, xE, zB1, zEnd + 0.056, 0.125, 2.154, front);            // Hochschrank Süd (Kühlschrank)
+  part(fitout, xF, xE, zB0, zB1, 0.125, 0.887, front);                     // Unterschränke
+  part(fitout, xW, xE, zB0, zB1, 0.887, 0.907, stone);                     // Arbeitsplatte 2 cm
+  part(fitout, xE - 0.02, xE, zB0, zB1, 0.907, 1.522, stone);              // Rückwand Granit
+  part(fitout, xE - 0.35, xE, zB0, zB1, 1.522, 2.154, front);              // Oberschränke, grifflos
+  const vline = (z, y0, y1, x = xF) => part(fitout, x - 0.003, x, z - 0.002, z + 0.002, y0, y1, gap);
+  const hline = (z0, z1, y, x = xF) => part(fitout, x - 0.003, x, z0, z1, y - 0.002, y + 0.002, gap);
+  const bar = (z0, z1, y, x = xF) => part(fitout, x - 0.012, x, z0 + 0.01, z1 - 0.01, y - 0.02, y + 0.012, steel);
+  const units = [zB0, zB0 + 0.55, zB0 + 1.15, zB0 + 1.75, zB1];
+  units.forEach((z) => { vline(z, 0.125, 0.887); vline(z, 1.522, 2.154, xE - 0.35); });
+  for (let i = 0; i < 4; i++) { bar(units[i], units[i + 1], 0.862); if (i !== 1) { hline(units[i], units[i + 1], 0.55); bar(units[i], units[i + 1], 0.53); } }
+  // Hochschrank Nord: zwei Auszüge, Backofen, Dampfbackofen, Klappe
+  const o0 = zT1 + 0.003, o1 = zT1 + 0.597;
+  hline(o0, o1, 0.5); bar(o0, o1, 0.48); bar(o0, o1, 0.862); hline(o0, o1, 1.815);
+  for (const y of [0.895, 1.36]) {
+    part(fitout, xF - 0.012, xF, o0, o1, y, y + 0.45, glass);
+    part(fitout, xF - 0.014, xF - 0.012, o0 + 0.07, o1 - 0.07, y + 0.06, y + 0.3, ovenWin);
+    part(fitout, xF - 0.04, xF - 0.02, o0 + 0.05, o1 - 0.05, y + 0.335, y + 0.355, steel);        // Griff
+    part(fitout, xF - 0.014, xF - 0.012, o0 + 0.2, o1 - 0.2, y + 0.39, y + 0.425, mat(0x3a5a78, { emissive: 0x1a2a3a }));  // Display
+  }
+  // Hochschrank Süd: Kühlschrank vollintegriert, zwei Fronten
+  hline(zT2, zEnd, 0.9); bar(zT2, zEnd, 0.92); vline(zT2, 0.125, 2.154); vline(zEnd, 0.125, 2.154);
+  // Spüle Suter DAN 50U (50 x 40 cm, Unterbau) mit Armatur
+  const sz = (units[2] + units[3]) / 2, sx = xW + 0.065;
+  part(fitout, sx, sx + 0.4, sz - 0.25, sz + 0.25, 0.9075, 0.9085, basin);
+  part(fitout, sx + 0.02, sx + 0.38, sz - 0.23, sz + 0.23, 0.9085, 0.9095, mat(0x5d6368, { roughness: 0.3, metalness: 0.8 }));
+  const tap = (x, z, h, dx) => {
+    const c = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.022, h, 16), steel); c.position.set(x, 0.907 + h / 2, z); c.castShadow = true; fitout.add(c);
+    part(fitout, Math.min(x, x + dx), Math.max(x, x + dx), z - 0.012, z + 0.012, 0.907 + h - 0.03, 0.907 + h, steel);
+    part(fitout, x - 0.01, x + 0.01, z + 0.018, z + 0.07, 0.907 + h * 0.55, 0.907 + h * 0.55 + 0.015, steel);
+  };
+  tap(sx + 0.45, sz, 0.28, -0.2);
+  for (let i = 0; i < 4; i++) part(fitout, xE - 0.2, xE - 0.14, zB0 + 0.29 + i * 0.575 - 0.03, zB0 + 0.29 + i * 0.575 + 0.03, 1.516, 1.522, led);
+  part(fitout, xE - 0.022, xE - 0.02, zB0 + 0.12, zB0 + 0.2, 1.08, 1.16, white);                   // Steckdosen
+  part(fitout, xE - 0.022, xE - 0.02, zB1 - 0.45, zB1 - 0.37, 1.08, 1.16, white);
+  // ----- Kochinsel 1.01 x 1.84 m, 1.20 m vor der Zeile; Arbeitsseite mit Auszügen zur Zeile, Türen zum Essplatz
+  const iE = xW - 1.2, iW = iE - 1.01, iN = zN + 0.656, iS = iN + 1.844;
+  part(fitout, iW + 0.07, iE - 0.07, iN + 0.05, iS - 0.05, 0, 0.125, plinth);
+  part(fitout, iW + 0.02, iE - 0.02, iN + 0.003, iS - 0.003, 0.125, 0.887, front);
+  part(fitout, iW, iE, iN, iS, 0.887, 0.907, stone);
+  const eF = iE - 0.02, wF = iW + 0.02;
+  // Ostseite (von Norden): 30 cm, 90 cm Kochfeld-Unterschrank, 60 cm Spülen-Unterschrank
+  const iu = [iN + 0.022, iN + 0.322, iN + 1.222, iS - 0.022];
+  iu.forEach((z) => part(fitout, eF, eF + 0.003, z - 0.002, z + 0.002, 0.125, 0.887, gap));
+  for (let i = 0; i < 3; i++) for (const y of [0.862, 0.56]) {
+    part(fitout, eF, eF + 0.012, iu[i] + 0.01, iu[i + 1] - 0.01, y - 0.02, y + 0.012, steel);
+    part(fitout, eF, eF + 0.003, iu[i], iu[i + 1], y - 0.282 + (y > 0.8 ? 0 : 0.3) - 0.002, y - 0.282 + (y > 0.8 ? 0 : 0.3) + 0.002, gap);
+  }
+  // Westseite: drei Türen 60 cm, grifflos
+  [iN + 0.022, iN + 0.622, iN + 1.222, iS - 0.022].forEach((z) => part(fitout, wF - 0.003, wF, z - 0.002, z + 0.002, 0.125, 0.887, gap));
+  // Kochfeld Electrolux DMGL8322UO (83 x 52 cm) mit Abzug in der Mitte, flächenbündig
+  const hz = iN + 0.772, hx1 = iE - 0.06, hx0 = hx1 - 0.52;
+  part(fitout, hx0, hx1, hz - 0.415, hz + 0.415, 0.9072, 0.9082, glass);
+  part(fitout, hx0 + 0.06, hx1 - 0.06, hz - 0.055, hz + 0.055, 0.9082, 0.9092, mat(0x54585c, { roughness: 0.4, metalness: 0.6 }));
+  for (const dz of [-0.24, 0.24]) for (const dx of [0.13, 0.39]) {
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.085, 0.09, 32), mat(0x6a6e73)); ring.rotation.x = -Math.PI / 2;
+    ring.position.set(hx0 + dx, 0.9085, hz + dz); fitout.add(ring);
+  }
+  // Kleines Becken Suter DAN 18U (18 x 40 cm) mit hoher Armatur
+  const bz = iN + 1.522;
+  part(fitout, hx0 + 0.1, hx0 + 0.5, bz - 0.09, bz + 0.09, 0.9075, 0.9085, basin);
+  part(fitout, hx0 + 0.115, hx0 + 0.485, bz - 0.075, bz + 0.075, 0.9085, 0.9095, mat(0x5d6368, { roughness: 0.3, metalness: 0.8 }));
+  tap(hx0 + 0.3, bz + 0.16, 0.32, 0);
+  part(fitout, hx0 + 0.29, hx0 + 0.31, bz + 0.0, bz + 0.16, 0.907 + 0.29, 0.907 + 0.32, steel);
+  part(fitout, iW + 0.3, iW + 0.38, iN - 0.002, iN + 0.003, 0.55, 0.63, white);                   // Arbeitssteckdose Inselseite
   // Bad / WC
   const tub = r(1232, 1352, 170, 218);
   fitout.add(box(tub, 0, 0.56, white));
@@ -333,7 +394,6 @@ const mirror = mat(0xd4e3ea, { roughness: 0.08, metalness: 0.15 });
 const gardMat = useMat('gard');
 for (const q of furniture) furn.add(box(q, q.y, q.y + q.h, q.color === 'gard' ? gardMat : mat(q.color)));
 // Tisch mit vier Beinen und Stühle mit Lehne, alles in Metern
-const part = (group, x0, x1, z0, z1, y0, y1, material) => group.add(box({ x0, x1, z0, z1 }, y0, y1, material));
 function table(group, q, topMat, legMat, h = 0.75) {
   part(group, q.x0, q.x1, q.z0, q.z1, h - 0.045, h, topMat);
   const i = 0.07, w = 0.07;
@@ -349,31 +409,130 @@ function chair(group, cx, cz, dir, seatMat, frameMat) {
   part(group, b[0], b[1], b[2], b[3], 0.46, 0.88, seatMat);
 }
 {
-  // Esstisch 1.05 x 2.20 m aus Holz, je drei Stühle an den Längsseiten
+  // Esstisch 1.05 x 2.20 m aus Holz, parallel zur Fensterfront, je drei Stühle an den Längsseiten
   const wood = mat(0xa9824f, { roughness: 0.6 }), woodDark = mat(0x8a6a40), seat = mat(0x8f8478), frame = mat(0x4a4038);
   table(furn, diningTable, wood, woodDark);
-  const cx = (diningTable.x0 + diningTable.x1) / 2;
-  for (const dx of [-0.7, 0, 0.7]) {
-    chair(furn, cx + dx, diningTable.z0 - 0.12, 's', seat, frame);
-    chair(furn, cx + dx, diningTable.z1 + 0.12, 'n', seat, frame);
+  const cz = (diningTable.z0 + diningTable.z1) / 2;
+  for (const dz of [-0.7, 0, 0.7]) {
+    chair(furn, diningTable.x0 - 0.12, cz + dz, 'e', seat, frame);
+    chair(furn, diningTable.x1 + 0.12, cz + dz, 'w', seat, frame);
   }
-  // Gartentisch 0.9 x 1.6 m mit vier Stühlen auf der Terrasse
-  const alu = mat(0x55595c, { roughness: 0.5 }), teak = mat(0xb08a5a, { roughness: 0.7 }), cushion = mat(0xcfc8bb);
-  table(furn, gardenTable, teak, alu, 0.74);
-  const gz = (gardenTable.z0 + gardenTable.z1) / 2;
-  for (const dz of [-0.4, 0.4]) {
-    chair(furn, gardenTable.x0 - 0.15, gz + dz, 'e', cushion, alu);
-    chair(furn, gardenTable.x1 + 0.15, gz + dz, 'w', cushion, alu);
+  // Gartentisch 0.9 x 1.6 m aus Teakholz mit Lattenplatte, vier Gartenstühle mit Armlehnen, Sonnenschirm
+  const teak = mat(0xb98d5c, { roughness: 0.75 }), teakDark = mat(0x9a7448, { roughness: 0.8 }), cushion = mat(0xe7e0d2);
+  const g = gardenTable, gx = (g.x0 + g.x1) / 2, gz = (g.z0 + g.z1) / 2;
+  for (let i = 0; i < 9; i++) { const x = g.x0 + i * 0.1; part(furn, x, x + 0.09, g.z0, g.z1, 0.715, 0.74, teak); }
+  part(furn, g.x0 + 0.05, g.x1 - 0.05, g.z0 + 0.08, g.z0 + 0.14, 0.66, 0.715, teakDark);
+  part(furn, g.x0 + 0.05, g.x1 - 0.05, g.z1 - 0.14, g.z1 - 0.08, 0.66, 0.715, teakDark);
+  for (const x of [g.x0 + 0.06, g.x1 - 0.12]) for (const z of [g.z0 + 0.08, g.z1 - 0.14]) part(furn, x, x + 0.06, z, z + 0.06, 0, 0.66, teakDark);
+  const gardenChair = (cx, czz, dir) => {
+    const sgn = dir === 'e' ? 1 : -1, hs = 0.27;                       // Stuhl schaut in +x ('e') oder -x ('w')
+    for (let i = 0; i < 5; i++) { const x = cx - hs + 0.01 + i * 0.106; part(furn, x, x + 0.09, czz - hs, czz + hs, 0.4, 0.425, teak); }
+    part(furn, cx - 0.2, cx + 0.2, czz - 0.22, czz + 0.22, 0.425, 0.465, cushion);
+    const bx = cx - sgn * hs;                                          // Rückenlehne aus drei Querlatten
+    for (const y of [0.55, 0.69, 0.83]) part(furn, Math.min(bx, bx - sgn * 0.025), Math.max(bx, bx - sgn * 0.025), czz - hs, czz + hs, y, y + 0.09, teak);
+    for (const dz of [-hs, hs - 0.04]) {
+      part(furn, cx - hs, cx - hs + 0.04, czz + dz, czz + dz + 0.04, 0, dir === 'e' ? 0.92 : 0.64, teakDark);
+      part(furn, cx + hs - 0.04, cx + hs, czz + dz, czz + dz + 0.04, 0, dir === 'e' ? 0.64 : 0.92, teakDark);
+      part(furn, cx - hs, cx + hs, czz + dz - 0.005, czz + dz + 0.045, 0.62, 0.645, teak);        // Armlehne
+    }
+  };
+  for (const dz of [-0.4, 0.4]) { gardenChair(g.x0 - 0.2, gz + dz, 'e'); gardenChair(g.x1 + 0.2, gz + dz, 'w'); }
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 2.45, 12), mat(0x8a8d90, { metalness: 0.5, roughness: 0.4 }));
+  pole.position.set(gx, 1.225, gz); pole.castShadow = true;
+  const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.26, 0.07, 24), mat(0x55585b)); foot.position.set(gx, 0.085, gz);
+  const cloth = mat(0xece2cf, { roughness: 0.9, side: THREE.DoubleSide });
+  const canopy = new THREE.Mesh(new THREE.ConeGeometry(1.5, 0.42, 8, 1, true), cloth);
+  canopy.position.set(gx, 2.27, gz); canopy.rotation.y = Math.PI / 8; canopy.castShadow = true;
+  const knob = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 8), teakDark); knob.position.set(gx, 2.5, gz);
+  furn.add(pole, foot, canopy, knob);
+}
+// Bett: q = Aussenmass Rahmen, head = Wand am Kopfende ('n','s','w','e'), y0 = Höhe der Liegefläche über Boden (Hochbett)
+function bed(q, head, { y0 = 0, frameMat = mat(0x9b8469), duvet = mat(0xe9e6df), headboard = true } = {}) {
+  const alongX = head === 'w' || head === 'e', L = alongX ? q.x1 - q.x0 : q.z1 - q.z0, W = alongX ? q.z1 - q.z0 : q.x1 - q.x0;
+  // u = Abstand vom Kopfende, v = quer; liefert Weltkoordinaten
+  const R = (u0, u1, v0, v1) => {
+    if (head === 'w') return [q.x0 + u0, q.x0 + u1, q.z0 + v0, q.z0 + v1];
+    if (head === 'e') return [q.x1 - u1, q.x1 - u0, q.z0 + v0, q.z0 + v1];
+    if (head === 'n') return [q.x0 + v0, q.x0 + v1, q.z0 + u0, q.z0 + u1];
+    return [q.x0 + v0, q.x0 + v1, q.z1 - u1, q.z1 - u0];
+  };
+  const P = (u0, u1, v0, v1, a, b, m) => { const c = R(u0, u1, v0, v1); return part(furn, c[0], c[1], c[2], c[3], y0 + a, y0 + b, m); };
+  if (y0 === 0) P(0.06, L - 0.06, 0.06, W - 0.06, 0, 0.12, mat(0x4a4038));
+  P(0, L, 0, W, 0.12, 0.3, frameMat);
+  P(0.05, L - 0.05, 0.05, W - 0.05, 0.3, 0.5, mat(0xf7f5f0));
+  if (headboard) P(0, 0.06, 0, W, 0.12, 1.0, frameMat);
+  const n = W > 1.4 ? 2 : 1, pw = n === 2 ? (W - 0.3) / 2 : W - 0.3;
+  for (let i = 0; i < n; i++) P(0.12, 0.52, 0.1 + i * (pw + 0.1), 0.1 + i * (pw + 0.1) + pw, 0.5, 0.6, mat(0xffffff));
+  P(0.62, L - 0.04, 0.03, W - 0.03, 0.5, 0.57, duvet);
+}
+{
+  const gm = gardMat, woodM = mat(0xb39468, { roughness: 0.6 }), dk = mat(0x4a4038), wh = mat(0xf4f2ee);
+  const doors = (q, side, n, h = 2.1) => {      // Schrank mit Türfugen; side = offene Seite
+    furn.add(box(q, 0, h, gm));
+    const len = side === 'w' || side === 'e' ? q.z1 - q.z0 : q.x1 - q.x0;
+    for (let i = 1; i < n; i++) {
+      const a = i * len / n;
+      if (side === 'w') part(furn, q.x0 - 0.004, q.x0, q.z0 + a - 0.003, q.z0 + a + 0.003, 0.08, h, dk);
+      if (side === 'e') part(furn, q.x1, q.x1 + 0.004, q.z0 + a - 0.003, q.z0 + a + 0.003, 0.08, h, dk);
+      if (side === 'n') part(furn, q.x0 + a - 0.003, q.x0 + a + 0.003, q.z0 - 0.004, q.z0, 0.08, h, dk);
+      if (side === 's') part(furn, q.x0 + a - 0.003, q.x0 + a + 0.003, q.z1, q.z1 + 0.004, 0.08, h, dk);
+    }
+  };
+  // ----- Zimmer 2: Doppelbett 180 x 200 cm (Rahmen 190 x 210), Kopfende an der Ostwand, zwei Nachttische
+  const z2 = r(868, 1088, 675, 1047), by = (z2.z0 + z2.z1) / 2 + 0.55;
+  bed({ x0: z2.x1 - 2.1, x1: z2.x1, z0: by - 0.95, z1: by + 0.95 }, 'e', { duvet: mat(0xdcd6cb) });
+  for (const z of [by - 0.95 - 0.5, by + 0.95 + 0.05]) {
+    part(furn, z2.x1 - 0.42, z2.x1, z, z + 0.45, 0, 0.5, woodM);
+    const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.1, 0.16, 16), wh); lamp.position.set(z2.x1 - 0.2, 0.68, z + 0.225);
+    part(furn, z2.x1 - 0.21, z2.x1 - 0.19, z + 0.215, z + 0.235, 0.5, 0.6, dk); furn.add(lamp);
   }
+  // ----- Zimmer 3: Einzelbett, Schrank 2.2 m an der Ostwand, Arbeitsplatz unter dem Fenster
+  bed(r(483, 547, 831, 973), 'n', { duvet: mat(0xcfd6d2) });
+  doors(r(815, 857, 882, 1036), 'w', 4);
+  const desk = r(577, 688, 993, 1043);
+  table(furn, desk, woodM, dk, 0.74);
+  const dcx = (desk.x0 + desk.x1) / 2;
+  part(furn, dcx - 0.3, dcx + 0.3, desk.z1 - 0.2, desk.z1 - 0.17, 0.85, 1.2, mat(0x1a1c1f, { roughness: 0.2 }));   // Bildschirm
+  part(furn, dcx - 0.03, dcx + 0.03, desk.z1 - 0.19, desk.z1 - 0.16, 0.74, 0.86, dk);
+  part(furn, dcx - 0.11, dcx + 0.11, desk.z1 - 0.26, desk.z1 - 0.1, 0.74, 0.75, dk);
+  part(furn, dcx - 0.22, dcx + 0.22, desk.z0 + 0.12, desk.z0 + 0.27, 0.74, 0.755, mat(0xd8d8d8));                   // Tastatur
+  part(furn, desk.x1 - 0.42, desk.x1 - 0.02, desk.z0 + 0.08, desk.z1 - 0.08, 0.1, 0.62, wh);                         // Rollkorpus
+  {
+    // Bürostuhl
+    const cx = dcx - 0.1, czz = desk.z0 - 0.25, fab = mat(0x3d4247);
+    const st = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.4, 10), dk); st.position.set(cx, 0.25, czz);
+    const ft = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.04, 5), dk); ft.position.set(cx, 0.04, czz); furn.add(st, ft);
+    part(furn, cx - 0.24, cx + 0.24, czz - 0.23, czz + 0.23, 0.45, 0.52, fab);
+    part(furn, cx - 0.22, cx + 0.22, czz - 0.27, czz - 0.22, 0.56, 1.02, fab);
+  }
+  // ----- Zimmer 1: Kinderzimmer mit Hochbett (Westwand), Einzelbett (Ostwand), Schrank, Kinderpult, Teppich
+  const kid1 = mat(0x7fa7c9), kid2 = mat(0xe6a08f), pine = mat(0xd9bf94, { roughness: 0.7 });
+  const hb = r(908, 973, 228, 370), H = 1.45;
+  bed(hb, 'n', { y0: H - 0.12, frameMat: pine, duvet: kid1, headboard: false });
+  for (const x of [hb.x0, hb.x1 - 0.06]) for (const z of [hb.z0, hb.z1 - 0.06]) part(furn, x, x + 0.06, z, z + 0.06, 0, H + 0.75, pine);
+  for (const y of [H + 0.42, H + 0.62]) {                                                        // Absturzsicherung
+    part(furn, hb.x1 - 0.04, hb.x1 - 0.01, hb.z0, hb.z1 - 0.55, y, y + 0.07, pine);
+    part(furn, hb.x0, hb.x1, hb.z0 + 0.01, hb.z0 + 0.04, y, y + 0.07, pine);
+    part(furn, hb.x0, hb.x1, hb.z1 - 0.04, hb.z1 - 0.01, y, y + 0.07, pine);
+  }
+  for (const z of [hb.z1 - 0.5, hb.z1 - 0.1]) part(furn, hb.x1, hb.x1 + 0.04, z, z + 0.04, 0, H + 0.75, pine);   // Leiter
+  for (let i = 1; i <= 5; i++) part(furn, hb.x1, hb.x1 + 0.035, hb.z1 - 0.5, hb.z1 - 0.06, i * 0.26, i * 0.26 + 0.03, pine);
+  table(furn, { x0: hb.x0 + 0.08, x1: hb.x0 + 0.63, z0: hb.z0 + 0.15, z1: hb.z0 + 1.15 }, pine, pine, 0.6);         // Kinderpult unter dem Hochbett
+  chair(furn, hb.x0 + 0.78, hb.z0 + 0.65, 'w', kid2, pine);
+  bed(r(1134, 1198, 172, 314), 'n', { frameMat: pine, duvet: kid2 });
+  doors(r(980, 1082, 381, 420), 'n', 3, 2.0);
+  const rug = new THREE.Mesh(new THREE.CircleGeometry(0.75, 40), mat(0xe8c56a, { roughness: 1 })); rug.rotation.x = -Math.PI / 2;
+  const rc = r(1052, 1052, 285, 285); rug.position.set(rc.x0, 0.026, rc.z0); rug.receiveShadow = true; furn.add(rug);
+  const tb = r(1090, 1128, 180, 206); part(furn, tb.x0, tb.x1, tb.z0, tb.z1, 0, 0.4, mat(0x8fbf9a));                 // Spielzeugkiste
 }
 {
   // Waschturm: Waschmaschine unten, Tumbler oben, Bedienseite nach Westen
   const w = washTower, body = mat(0xf4f4f2, { roughness: 0.35 });
-  part(fitout, w.x0, w.x1, w.z0, w.z1, 0, 0.85, body);
-  part(fitout, w.x0, w.x1, w.z0, w.z1, 0.87, 1.72, body);
+  part(fitout, w.x0, w.x1, w.z0, w.z1, 0, 0.849, body);
+  part(fitout, w.x0, w.x1, w.z0, w.z1, 0.851, 1.7, body);
   const zc = (w.z0 + w.z1) / 2;
-  for (const y of [0.42, 1.29]) {
-    const door = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.03, 28), dark);
+  for (const y of [0.4, 1.25]) {
+    const door = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.03, 28), dark);
     door.rotation.z = Math.PI / 2; door.position.set(w.x0 - 0.015, y, zc); fitout.add(door);
     part(fitout, w.x0 - 0.012, w.x0, w.z0 + 0.04, w.z1 - 0.04, y + 0.3, y + 0.38, mat(0x9aa0a4));
   }

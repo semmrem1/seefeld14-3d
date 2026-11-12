@@ -18,11 +18,11 @@ export const WALL_H = 2.5; // Annahme, Raumhöhe ist in den Unterlagen nicht ang
 export const outline = [r(446, 1386, 128, 441), r(446, 1515, 441, 771), r(446, 1120, 771, 1086)];
 
 export const rooms = [
-  { id: 'kueche', name: 'Küche / Essen', area: 23.3, fenster: 13.0, floor: 'parkett', rects: [r(468, 895, 167, 422)],
+  { id: 'kueche', name: 'Küche / Essen', area: 23.3, fenster: 13.0, floor: 'platten', rects: [r(468, 895, 167, 422)],
     note: 'Jahreszeitenzimmer: Fensterfront zur Terrasse vollständig öffenbar' },
   { id: 'wohnen', name: 'Wohnen', area: 28.1, fenster: 4.3, floor: 'parkett', rects: [r(480, 750, 422, 817), r(750, 857, 565, 817)],
     note: 'Offen zu Küche / Essen' },
-  { id: 'zimmer1', name: 'Zimmer 1', area: 15.7, fenster: 4.3, floor: 'parkett', rects: [r(906, 1200, 167, 422)], note: 'Zugang vom Korridor, neben Bad / WC' },
+  { id: 'zimmer1', name: 'Zimmer 1', area: 15.7, fenster: 4.3, floor: 'parkett', rects: [r(906, 1200, 167, 422)], note: 'Zugang vom Korridor, neben Bad / WC. Möbliert als Kinderzimmer mit Hochbett.' },
   { id: 'zimmer2', name: 'Zimmer 2', area: 17.2, fenster: 3.4, floor: 'parkett', rects: [r(868, 1088, 675, 1047)],
     note: 'Elternzimmer mit Ankleide und eigener Dusche / WC' },
   { id: 'zimmer3', name: 'Zimmer 3', area: 17.6, fenster: 4.3, floor: 'parkett', rects: [r(480, 857, 829, 1047)], note: 'Zugang vom Wohnen' },
@@ -72,8 +72,6 @@ export const BUILDING_LEN = 27.34; // Gebäudelänge gemäss Plan
 // Möblierung nur zur Veranschaulichung (nicht im Kaufpreis)
 const f = (x0, x1, z0, z1, h, color, y = 0) => ({ ...r(x0, x1, z0, z1), h, color, y });
 export const furniture = [
-  f(908, 1048, 235, 357, 0.45, 0xd8d2ca),          // Bett Zimmer 1
-  f(1156, 1198, 295, 420, 2.1, 'gard'),            // Schrank Zimmer 1
   // Ecksofa in der Südwestecke des Wohnbereichs: 2.85 m an der Südwand, 1.75 m an der Westwand
   f(482, 679, 751, 801, 0.42, 0x8f8478),           // Sitzfläche lang
   f(482, 679, 801, 815, 0.8, 0x857a6e),            // Rückenlehne Süd
@@ -88,9 +86,6 @@ export const furniture = [
   f(590, 596, 582, 640, 0.6, 0x968c7e),            // Armlehne links
   f(652, 658, 582, 640, 0.6, 0x968c7e),            // Armlehne rechts
   f(829, 857, 700, 800, 0.45, 0x6b5a4e),           // Sideboard an der Wand zu Zimmer 2
-  f(483, 545, 831, 971, 0.45, 0xd8d2ca),           // Bett Zimmer 3
-  f(698, 795, 995, 1044, 0.74, 0x9b8469),          // Pult Zimmer 3
-  f(947, 1087, 869, 991, 0.45, 0xd8d2ca),          // Bett Zimmer 2
   f(870, 912, 677, 801, 2.1, 'gard'),              // Schrank Zimmer 2
   f(972, 1087, 436, 474, 2.15, 'gard'),            // Einbauschränke Entrée
   f(1100, 1222, 597, 637, 2.15, 'gard'),           // Schränke Ankleide
@@ -98,6 +93,8 @@ export const furniture = [
 
 // Ausbaulinien gemäss PDF "Ausbaulinien" (je drei Optionen pro Gattung)
 export const ausbaulinien = [
+  { name: 'Offerte Küche', parkett: 0xd2b596, nass: 0xcbb5a3, platten: 0xa3978c, front: 0xc6b6a2, stone: 0x8b8c90, speck: 0.5, gard: 0xb9b5aa,
+    text: ['Küche gemäss Offerte LD Küchen vom 06.11.2026', 'Küchenfront PerfectSense Graubraun', 'Granit New Angola, poliert', 'Küchenboden Platten 60 x 60 wie in den Perspektiven (Farbton geschätzt)', 'Parkett Eiche RMC Neutral R2020', 'Nasszellen Iamara Cayman Cappuccino'] },
   { name: 'Option 1', parkett: 0xd2b596, nass: 0xcbb5a3, platten: 0xe6e1da, front: 0xa69b8e, stone: 0xe6e6e2, speck: 0.25, gard: 0xb9b5aa,
     text: ['Parkett Eiche RMC Neutral R2020', 'Nasszellen Iamara Cayman Cappuccino', 'Platten Colom Creme', 'Küchenfront Graubraun', 'Naturstein London White', 'Garderobe Kieselgrau'] },
   { name: 'Option 2', parkett: 0xd0a070, nass: 0xd9cfbd, platten: 0xbcbebe, front: 0x3b3c39, stone: 0xdcdcde, speck: 0.9, gard: 0x8e8c87,
@@ -106,9 +103,10 @@ export const ausbaulinien = [
     text: ['Parkett Eiche RMC Charcoal R305', 'Nasszellen Iamara Espalmador Taupe', 'Platten Colom Anthrazit', 'Küchenfront Ecru', 'Naturstein New Angola', 'Garderobe Lichtgrau'] },
 ];
 // Esstisch aus Holz, 1.05 x 2.20 m, je drei Stühle an den Längsseiten
-export const diningTable = { x0: 0.75, x1: 2.95, z0: mz(294.5) - 0.525, z1: mz(294.5) + 0.525 };
+export const diningTable = { x0: 1.375, x1: 2.425, z0: mz(294.5) - 1.1, z1: mz(294.5) + 1.1 };
 // Abstellraum: Waschturm (Waschmaschine und Tumbler übereinander) und Vorratsregale
-export const washTower = r(902, 945, 507, 547);
+// V-ZUG Adora V4000: je 60 x 60 x 85 cm, übereinander ca. 1.70 m
+export const washTower = { x0: mx(945) - 0.6, x1: mx(945), z0: mz(549) - 0.6, z1: mz(549) };
 export const shelves = [
   { ...r(764, 850, 526, 551), open: 'n' },   // Südwand, 1.25 m lang, 36 cm tief
   { ...r(923, 948, 438, 500), open: 'w' },   // Ostwand neben dem Waschturm, 90 cm lang, 36 cm tief
