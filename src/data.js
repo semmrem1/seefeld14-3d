@@ -42,7 +42,7 @@ export const openings = [
   r(745, 807, 815, 831),     // Wohnen -> Zimmer 3
   r(918, 978, 661, 677),     // Korridor -> Zimmer 2
   r(1086, 1102, 674, 737),   // Zimmer 2 -> Ankleide
-  r(1221, 1231, 600, 668),   // Ankleide -> Dusche
+  r(1221, 1231, 686, 738),   // Ankleide -> Dusche (Schiebetür, unterer Teil gemäss Vertragsplan)
   r(1491, 1517, 478, 550),   // Wohnungstür
 ];
 
@@ -53,7 +53,12 @@ export const windows = [
   r(567, 697, 1045, 1088), r(868, 1000, 1045, 1088),   // unten: Zimmer 3, Zimmer 2
 ];
 
-export const terrace = { ...r(366, 446, 158, 432), area: 5.5 };
+// Terrasse als Variante mit 2.5 m Tiefe (Plan: 1.2 m tief, 5.5 m2). Der Gartenstreifen ist ca. 3.5 m tief.
+export const TERRACE_DEPTH = 2.5;
+const tz = r(366, 446, 158, 432);
+export const terrace = { x0: -TERRACE_DEPTH, x1: 0, z0: tz.z0, z1: tz.z1, area: Math.round(TERRACE_DEPTH * (tz.z1 - tz.z0) * 10) / 10, planArea: 5.5 };
+// Gartentisch 0.9 x 1.6 m mit vier Stühlen
+export const gardenTable = { x0: -1.85, x1: -0.95, z0: (tz.z0 + tz.z1) / 2 - 0.8, z1: (tz.z0 + tz.z1) / 2 + 0.8 };
 
 // Privater Garten 97.0 m2 gemäss Plan "Angabe Aussenfläche Gartenwohnung"
 const D = mz(1086);
@@ -69,17 +74,26 @@ const f = (x0, x1, z0, z1, h, color, y = 0) => ({ ...r(x0, x1, z0, z1), h, color
 export const furniture = [
   f(908, 1048, 235, 357, 0.45, 0xd8d2ca),          // Bett Zimmer 1
   f(1156, 1198, 295, 420, 2.1, 'gard'),            // Schrank Zimmer 1
-  f(521, 646, 517, 569, 0.42, 0x8f8478),           // Sofa 1
-  f(521, 646, 672, 724, 0.42, 0x8f8478),           // Sofa 2
-  f(549, 618, 604, 639, 0.3, 0x6b5a4e),            // Salontisch
-  f(517, 622, 786, 814, 0.45, 0x6b5a4e),           // Sideboard
+  // Ecksofa in der Südwestecke des Wohnbereichs: 2.85 m an der Südwand, 1.75 m an der Westwand
+  f(482, 679, 751, 801, 0.42, 0x8f8478),           // Sitzfläche lang
+  f(482, 679, 801, 815, 0.8, 0x857a6e),            // Rückenlehne Süd
+  f(496, 548, 694, 751, 0.42, 0x8f8478),           // Sitzfläche Schenkel
+  f(482, 496, 694, 801, 0.8, 0x857a6e),            // Rückenlehne West
+  f(665, 679, 751, 801, 0.6, 0x857a6e),            // Armlehne
+  f(496, 548, 687, 694, 0.6, 0x857a6e),            // Armlehne Schenkel
+  f(580, 650, 690, 726, 0.34, 0x6b5a4e),           // Salontisch
+  // Sessel mittig im Wohnbereich, Blick zum Sofa
+  f(596, 652, 594, 640, 0.42, 0xa39a8c),           // Sitz
+  f(596, 652, 582, 594, 0.85, 0x968c7e),           // Rückenlehne
+  f(590, 596, 582, 640, 0.6, 0x968c7e),            // Armlehne links
+  f(652, 658, 582, 640, 0.6, 0x968c7e),            // Armlehne rechts
+  f(829, 857, 700, 800, 0.45, 0x6b5a4e),           // Sideboard an der Wand zu Zimmer 2
   f(483, 545, 831, 971, 0.45, 0xd8d2ca),           // Bett Zimmer 3
   f(698, 795, 995, 1044, 0.74, 0x9b8469),          // Pult Zimmer 3
   f(947, 1087, 869, 991, 0.45, 0xd8d2ca),          // Bett Zimmer 2
   f(870, 912, 677, 801, 2.1, 'gard'),              // Schrank Zimmer 2
   f(972, 1087, 436, 474, 2.15, 'gard'),            // Einbauschränke Entrée
   f(1100, 1222, 597, 637, 2.15, 'gard'),           // Schränke Ankleide
-  f(902, 945, 507, 547, 1.75, 0xf4f4f2),           // Waschturm
 ];
 
 // Ausbaulinien gemäss PDF "Ausbaulinien" (je drei Optionen pro Gattung)
@@ -91,7 +105,14 @@ export const ausbaulinien = [
   { name: 'Option 3', parkett: 0x7a6c62, nass: 0xab9d8d, platten: 0x414243, front: 0xd2cdc0, stone: 0x3a3e3f, speck: 0.35, gard: 0xd2d2ce,
     text: ['Parkett Eiche RMC Charcoal R305', 'Nasszellen Iamara Espalmador Taupe', 'Platten Colom Anthrazit', 'Küchenfront Ecru', 'Naturstein New Angola', 'Garderobe Lichtgrau'] },
 ];
-export const diningTable = { x: mx(595), z: mz(295), r: 0.62 };
+// Esstisch aus Holz, 1.05 x 2.20 m, je drei Stühle an den Längsseiten
+export const diningTable = { x0: 0.75, x1: 2.95, z0: mz(294.5) - 0.525, z1: mz(294.5) + 0.525 };
+// Abstellraum: Waschturm (Waschmaschine und Tumbler übereinander) und Vorratsregale
+export const washTower = r(902, 945, 507, 547);
+export const shelves = [
+  { ...r(764, 850, 526, 551), open: 'n' },   // Südwand, 1.25 m lang, 36 cm tief
+  { ...r(923, 948, 438, 500), open: 'w' },   // Ostwand neben dem Waschturm, 90 cm lang, 36 cm tief
+];
 
 export const facts = {
   titel: 'Wohnung 01',
@@ -118,7 +139,8 @@ export const facts = {
     { titel: 'Flächen', zeilen: [
       ['Wohnfläche', '151.3 m²'],
       ['Garten privat', '97.0 m²'],
-      ['Terrasse', '5.5 m²'],
+      ['Terrasse gemäss Plan', '5.5 m² (ca. 1.2 m tief)'],
+      ['Terrasse im Modell', 'Variante 2.5 m tief, ca. 9.9 m²'],
       ['Keller', '10.4 m²'],
     ] },
     { titel: 'Haustechnik', zeilen: [

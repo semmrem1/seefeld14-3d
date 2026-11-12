@@ -2,8 +2,9 @@ import * as THREE from 'three';
 import { OrbitControls } from './../vendor/OrbitControls.js';
 import {
   rooms, outline, openings, windows, terrace, garden, furniture, diningTable, ausbaulinien,
+  gardenTable, washTower, shelves,
   facts, WALL_H, DEPTH, BUILDING_LEN, r,
-} from './data.js?v=6';
+} from './data.js?v=7';
 
 const canvas = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
@@ -331,18 +332,74 @@ const mirror = mat(0xd4e3ea, { roughness: 0.08, metalness: 0.15 });
 }
 const gardMat = useMat('gard');
 for (const q of furniture) furn.add(box(q, q.y, q.y + q.h, q.color === 'gard' ? gardMat : mat(q.color)));
+// Tisch mit vier Beinen und Stühle mit Lehne, alles in Metern
+const part = (group, x0, x1, z0, z1, y0, y1, material) => group.add(box({ x0, x1, z0, z1 }, y0, y1, material));
+function table(group, q, topMat, legMat, h = 0.75) {
+  part(group, q.x0, q.x1, q.z0, q.z1, h - 0.045, h, topMat);
+  const i = 0.07, w = 0.07;
+  for (const x of [q.x0 + i, q.x1 - i - w]) for (const z of [q.z0 + i, q.z1 - i - w]) part(group, x, x + w, z, z + w, 0, h - 0.045, legMat);
+}
+// dir: Richtung, in die der Stuhl schaut ('n' = nach -z, 's' = +z, 'w' = -x, 'e' = +x)
+function chair(group, cx, cz, dir, seatMat, frameMat) {
+  const s = 0.45, hs = s / 2, t = 0.04;
+  part(group, cx - hs, cx + hs, cz - hs, cz + hs, 0.42, 0.46, seatMat);
+  for (const dx of [-hs, hs - t]) for (const dz of [-hs, hs - t]) part(group, cx + dx, cx + dx + t, cz + dz, cz + dz + t, 0, 0.42, frameMat);
+  const b = { n: [cx - hs, cx + hs, cz + hs - t, cz + hs], s: [cx - hs, cx + hs, cz - hs, cz - hs + t],
+    w: [cx + hs - t, cx + hs, cz - hs, cz + hs], e: [cx - hs, cx - hs + t, cz - hs, cz + hs] }[dir];
+  part(group, b[0], b[1], b[2], b[3], 0.46, 0.88, seatMat);
+}
 {
-  const top = new THREE.Mesh(new THREE.CylinderGeometry(diningTable.r, diningTable.r, 0.05, 40), mat(0x9b8469));
-  top.position.set(diningTable.x, 0.74, diningTable.z); top.castShadow = true;
-  const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.25, 0.72, 16), mat(0x5c5049));
-  leg.position.set(diningTable.x, 0.36, diningTable.z);
-  furn.add(top, leg);
-  for (let a = 0; a < 5; a++) {
-    const ang = a / 5 * Math.PI * 2;
-    const ch = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.46, 0.42), mat(0x8f8478));
-    ch.position.set(diningTable.x + Math.cos(ang) * 1.0, 0.23, diningTable.z + Math.sin(ang) * 1.0);
-    ch.rotation.y = -ang; ch.castShadow = true; furn.add(ch);
+  // Esstisch 1.05 x 2.20 m aus Holz, je drei Stühle an den Längsseiten
+  const wood = mat(0xa9824f, { roughness: 0.6 }), woodDark = mat(0x8a6a40), seat = mat(0x8f8478), frame = mat(0x4a4038);
+  table(furn, diningTable, wood, woodDark);
+  const cx = (diningTable.x0 + diningTable.x1) / 2;
+  for (const dx of [-0.7, 0, 0.7]) {
+    chair(furn, cx + dx, diningTable.z0 - 0.12, 's', seat, frame);
+    chair(furn, cx + dx, diningTable.z1 + 0.12, 'n', seat, frame);
   }
+  // Gartentisch 0.9 x 1.6 m mit vier Stühlen auf der Terrasse
+  const alu = mat(0x55595c, { roughness: 0.5 }), teak = mat(0xb08a5a, { roughness: 0.7 }), cushion = mat(0xcfc8bb);
+  table(furn, gardenTable, teak, alu, 0.74);
+  const gz = (gardenTable.z0 + gardenTable.z1) / 2;
+  for (const dz of [-0.4, 0.4]) {
+    chair(furn, gardenTable.x0 - 0.15, gz + dz, 'e', cushion, alu);
+    chair(furn, gardenTable.x1 + 0.15, gz + dz, 'w', cushion, alu);
+  }
+}
+{
+  // Waschturm: Waschmaschine unten, Tumbler oben, Bedienseite nach Westen
+  const w = washTower, body = mat(0xf4f4f2, { roughness: 0.35 });
+  part(fitout, w.x0, w.x1, w.z0, w.z1, 0, 0.85, body);
+  part(fitout, w.x0, w.x1, w.z0, w.z1, 0.87, 1.72, body);
+  const zc = (w.z0 + w.z1) / 2;
+  for (const y of [0.42, 1.29]) {
+    const door = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.03, 28), dark);
+    door.rotation.z = Math.PI / 2; door.position.set(w.x0 - 0.015, y, zc); fitout.add(door);
+    part(fitout, w.x0 - 0.012, w.x0, w.z0 + 0.04, w.z1 - 0.04, y + 0.3, y + 0.38, mat(0x9aa0a4));
+  }
+  // Vorratsregale: Seitenwangen, fünf Tablare, ein paar Vorratskisten
+  const board = mat(0xd9c9a8), crate = [mat(0xb9c4b0), mat(0xc9b9a0), mat(0xa9b4c0)];
+  shelves.forEach((q, k) => {
+    const alongX = q.open === 'n';
+    const ends = alongX ? [[q.x0, q.x0 + 0.03, q.z0, q.z1], [q.x1 - 0.03, q.x1, q.z0, q.z1]] : [[q.x0, q.x1, q.z0, q.z0 + 0.03], [q.x0, q.x1, q.z1 - 0.03, q.z1]];
+    for (const e of ends) part(furn, e[0], e[1], e[2], e[3], 0, 2.0, board);
+    for (let i = 0; i < 5; i++) {
+      const y = 0.12 + i * 0.45;
+      part(furn, q.x0, q.x1, q.z0, q.z1, y, y + 0.03, board);
+      if (i === 4) continue;
+      const len = alongX ? q.x1 - q.x0 : q.z1 - q.z0, n = Math.floor((len - 0.1) / 0.36);
+      for (let j = 0; j < n; j++) {
+        if ((i + j + k) % 3 === 2) continue;
+        const a = (alongX ? q.x0 : q.z0) + 0.07 + j * 0.36, h = 0.2 + ((i * 3 + j) % 3) * 0.05, m = crate[(i + j) % 3];
+        if (alongX) part(furn, a, a + 0.3, q.z0 + 0.04, q.z1 - 0.04, y + 0.03, y + 0.03 + h, m);
+        else part(furn, q.x0 + 0.04, q.x1 - 0.04, a, a + 0.3, y + 0.03, y + 0.03 + h, m);
+      }
+    }
+  });
+  // Schiebetür Ankleide -> Dusche / WC: Türblatt geöffnet vor dem festen Wandteil
+  const sl = r(1231.5, 1234, 628, 684);
+  const leaf = box(sl, 0, 2.05, mat(0xf2f0ec, { roughness: 0.4 })); fitout.add(leaf);
+  part(fitout, r(1229, 1235, 0, 0).x0, r(1229, 1235, 0, 0).x1, r(0, 0, 600, 739).z0, r(0, 0, 600, 739).z1, 2.05, 2.1, steel);
 }
 
 // ---------- Übriges Gartengeschoss und Gebäude darüber (rote Holzfassade, dunkles Satteldach) ----------
@@ -466,7 +523,7 @@ for (const room of rooms) {
   l.el.addEventListener('click', () => focusRoom(room.id));
 }
 addLabel(new THREE.Vector3(-1.75, 0.2, 10.5), `<b>Garten</b><span>${garden.area.toFixed(1)} m²</span>`, 'out room');
-addLabel(new THREE.Vector3((terrace.x0 + terrace.x1) / 2, 0.2, (terrace.z0 + terrace.z1) / 2), `<b>Terrasse</b><span>${terrace.area} m²</span>`, 'out room');
+addLabel(new THREE.Vector3(terrace.x0 + 0.45, 0.2, terrace.z0 + 0.5), `<b>Terrasse</b><span>Variante ${(terrace.x1 - terrace.x0).toFixed(1)} m tief · ca. ${terrace.area} m²</span>`, 'out room');
 addLabel(new THREE.Vector3(21.5, WALL_H, 7), '<b>Keller · Velos · Waschen · Autolift</b>', 'out room');
 addLabel(new THREE.Vector3(-7, 1.2, -3), '<b>N</b>', 'north');
 addLabel(new THREE.Vector3(10, EAVE + 5.5, DEPTH * 0.7), '<b>Photovoltaik</b><span>auf dem Hauptdach</span>', 'building');
@@ -500,6 +557,7 @@ function dim(x0, z0, x1, z1, y = 0.035) {
   dim(garden.rects[0].x0, 5.2, 0, 5.2); dim(garden.rects[0].x0 + 0.5, 0, garden.rects[0].x0 + 0.5, garden.rects[0].z1);
   dim(0, garden.rects[1].z1 - 0.5, garden.rects[1].x1, garden.rects[1].z1 - 0.5);
   dim(garden.rects[1].x1 - 0.5, DEPTH, garden.rects[1].x1 - 0.5, garden.rects[1].z1);
+  dim(terrace.x0, terrace.z1 - 0.25, 0, terrace.z1 - 0.25); dim(terrace.x0 + 0.25, terrace.z0, terrace.x0 + 0.25, terrace.z1);
 }
 let dimsOn = true;
 
@@ -596,7 +654,7 @@ async function tour() {
     if (!await sleep(1700, tk)) return;
   }
   setActive(null);
-  setCaption('Privater Garten · 97.0 m²', 'Südwestseite, dazu 5.5 m² Terrasse vor dem Jahreszeitenzimmer');
+  setCaption('Privater Garten · 97.0 m²', 'Südwestseite. Terrasse als Variante mit 2.5 m Tiefe gezeigt (im Plan 5.5 m²)');
   if (!await fly([-13 * far, 8 * far, 22 * far], [1, 0, 10], 2800, tk)) return;
   if (!await sleep(2600, tk)) return;
   setCaption("CHF 1'890'000", 'Frei zoomen oder mit «Begehen» durch die Wohnung laufen');
@@ -704,7 +762,7 @@ function walkStep(dt) {
   camera.position.y = EYE;
   camera.rotation.set(pitch, -yaw, 0, 'YXZ');
   const here = rooms.find((q) => inAny(camera.position.x, camera.position.z, q.rects));
-  const name = here ? `${here.name} · ${here.area.toFixed(1)} m²` : inRect(camera.position.x, camera.position.z, terrace) ? 'Terrasse · 5.5 m²' : 'Garten · 97.0 m²';
+  const name = here ? `${here.name} · ${here.area.toFixed(1)} m²` : inRect(camera.position.x, camera.position.z, terrace) ? `Terrasse · Variante ca. ${terrace.area} m² (Plan 5.5 m²)` : 'Garten · 97.0 m²';
   if (caption.dataset.w !== name) { caption.dataset.w = name; setCaption(name, here ? here.note : ''); }
 }
 
